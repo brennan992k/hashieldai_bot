@@ -11,6 +11,10 @@ import { BotBackService } from './bot.back.service';
 import { CommonLogger } from 'src/common/logger';
 import { ChainId } from 'src/app.type';
 import { BotWeb2LoginsService } from './bot.web2-logins.service';
+import { BotDefiWalletsService } from './bot.defi-wallets.service';
+import { BotPasswordHealthService } from './bot.password-health.service';
+import { BotWalletHealthService } from './bot.wallet-health.service';
+import { BotAutoFillService } from './bot.auto-fill.service';
 
 @Injectable()
 export class BotCallbackService {
@@ -22,6 +26,10 @@ export class BotCallbackService {
     protected readonly aboutService: BotAboutService,
     protected readonly walletsService: BotWalletsService,
     protected readonly web2LoginsService: BotWeb2LoginsService,
+    protected readonly defiWalletsService: BotDefiWalletsService,
+    protected readonly passwordHealthService: BotPasswordHealthService,
+    protected readonly walletHealthService: BotWalletHealthService,
+    protected readonly autoFillService: BotAutoFillService,
     protected readonly backService: BotBackService,
   ) {}
 
@@ -88,6 +96,18 @@ export class BotCallbackService {
             break;
           case CallbackDataKey.web2Logins:
             this.web2LoginsService.onWeb2Logins(ctx);
+            break;
+          case CallbackDataKey.defiWallets:
+            this.defiWalletsService.onDefiWallets(ctx);
+            break;
+          case CallbackDataKey.autoFill:
+            this.autoFillService.onAutoFill(ctx);
+            break;
+          case CallbackDataKey.passwordHealth:
+            this.passwordHealthService.onPasswordHealth(ctx);
+            break;
+          case CallbackDataKey.walletHealth:
+            this.walletHealthService.onWalletHealth(ctx);
             break;
           case CallbackDataKey.about:
             this.aboutService.onAbout(ctx);

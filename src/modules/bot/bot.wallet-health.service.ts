@@ -11,7 +11,7 @@ import { User } from 'telegraf/typings/core/types/typegram';
 import { BotHelperService } from './bot.helper.service';
 
 @Injectable()
-export class BotPasswordHealthService {
+export class BotWalletHealthService {
   constructor(
     @InjectBot()
     protected readonly bot: Telegraf<Scenes.SceneContext>,
@@ -20,7 +20,7 @@ export class BotPasswordHealthService {
     protected readonly helperService: BotHelperService,
     protected readonly service: BotService,
   ) {}
-  private buildPasswordHealthOptions(from: User, backTo?: CallbackDataKey) {
+  private buildWalletHealthOptions(from: User, backTo?: CallbackDataKey) {
     return {
       parse_mode: 'HTML',
       reply_markup: {
@@ -40,7 +40,7 @@ export class BotPasswordHealthService {
     };
   }
 
-  public async onPasswordHealth(
+  public async onWalletHealth(
     @Ctx() ctx: Context,
     backFrom?: CallbackDataKey,
     backTo?: CallbackDataKey,
@@ -53,7 +53,7 @@ export class BotPasswordHealthService {
       await this.helperService.editOrSendMessage(
         ctx,
         `<b>💳 Web2 Logins</b>`,
-        this.buildPasswordHealthOptions(from, backTo),
+        this.buildWalletHealthOptions(from, backTo),
         backFrom,
       );
     } catch (error) {

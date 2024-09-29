@@ -11,6 +11,10 @@ import { BotWalletsService } from './bot.wallets.service';
 import { BotMenuService } from './bot.menu.service';
 import { BotAboutService } from './bot.about.service';
 import { BotWeb2LoginsService } from './bot.web2-logins.service';
+import { BotDefiWalletsService } from './bot.defi-wallets.service';
+import { BotPasswordHealthService } from './bot.password-health.service';
+import { BotWalletHealthService } from './bot.wallet-health.service';
+import { BotAutoFillService } from './bot.auto-fill.service';
 
 @Injectable()
 export class BotBackService {
@@ -23,6 +27,10 @@ export class BotBackService {
     protected readonly faqService: BotAboutService,
     protected readonly walletsService: BotWalletsService,
     protected readonly web2LoginsService: BotWeb2LoginsService,
+    protected readonly defiWalletsService: BotDefiWalletsService,
+    protected readonly passwordHealthService: BotPasswordHealthService,
+    protected readonly walletHealthService: BotWalletHealthService,
+    protected readonly autoFillService: BotAutoFillService,
     protected readonly service: BotService,
   ) {}
 
@@ -53,6 +61,18 @@ export class BotBackService {
             break;
           case CallbackDataKey.web2Logins:
             this.web2LoginsService.onWeb2Logins(ctx, callback_data.key);
+            break;
+          case CallbackDataKey.defiWallets:
+            this.defiWalletsService.onDefiWallets(ctx, callback_data.key);
+            break;
+          case CallbackDataKey.autoFill:
+            this.autoFillService.onAutoFill(ctx, callback_data.key);
+            break;
+          case CallbackDataKey.passwordHealth:
+            this.passwordHealthService.onPasswordHealth(ctx, callback_data.key);
+            break;
+          case CallbackDataKey.walletHealth:
+            this.walletHealthService.onWalletHealth(ctx, callback_data.key);
             break;
           default:
             break;
