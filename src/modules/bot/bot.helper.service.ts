@@ -55,7 +55,7 @@ export class BotHelperService {
     return html.replace(/<[^>]*>/g, '').trim();
   }
 
-  public buildBacKAndCloseButtons(backTo?: CallbackDataKey) {
+  public buildBacKAndCloseButtons(backTo?: CallbackDataKey, params?: string) {
     let buttons = [
       {
         text: '❌ Close',
@@ -72,7 +72,7 @@ export class BotHelperService {
           text: '⬅️ Back',
           callback_data: new CallbackData<string>(
             CallbackDataKey.back,
-            backTo,
+            `${backTo}_${params}`,
           ).toJSON(),
         },
         ...buttons,

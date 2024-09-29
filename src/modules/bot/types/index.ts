@@ -30,6 +30,7 @@ export enum DefiWalletKey {
   selectWalletOfDefiWallet = 'dwswodw',
   deleteWalletOfDefiWallet = 'dwdwodw',
   refreshWalletOfDefiWallet = 'dwrwodw',
+  editWalletOfDefiWallet = 'dwewodw',
 }
 
 export enum CallbackDataKey {
@@ -68,6 +69,7 @@ export enum CallbackDataKey {
   selectWalletOfDefiWallet = DefiWalletKey.selectWalletOfDefiWallet,
   deleteWalletOfDefiWallet = DefiWalletKey.deleteWalletOfDefiWallet,
   refreshWalletOfDefiWallet = DefiWalletKey.refreshWalletOfDefiWallet,
+  editWalletOfDefiWallet = DefiWalletKey.editWalletOfDefiWallet,
 
   updateProfile = 'updateProfile',
   refreshAutoFill = 'refreshAutoFill',

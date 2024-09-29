@@ -124,16 +124,21 @@ export class BotCallbackService {
             this.defiWalletsService.onRefreshDefiWallet(
               ctx,
               callback_data.params as string,
-              CallbackDataKey.wallets,
-              CallbackDataKey.wallets,
+              CallbackDataKey.selectDefiWallet,
+              CallbackDataKey.defiWallets,
             );
             break;
           case CallbackDataKey.deleteDefiWallet:
             this.defiWalletsService.onDeleteDefiWallet(
               ctx,
               callback_data.params as string,
-              CallbackDataKey.wallets,
-              CallbackDataKey.wallets,
+              CallbackDataKey.selectDefiWallet,
+            );
+            break;
+          case CallbackDataKey.editDefiWallet:
+            this.defiWalletsService.onEnterDefiWalletOrganization(
+              ctx,
+              callback_data.params as string,
             );
             break;
           case CallbackDataKey.selectWalletOfDefiWallet:
@@ -167,6 +172,19 @@ export class BotCallbackService {
               const [defiWalletId, walletIndex] =
                 callback_data.params.split('_');
               this.defiWalletsService.onDeleteWalletOfDefiWallet(
+                ctx,
+                defiWalletId,
+                parseInt(walletIndex),
+                CallbackDataKey.selectDefiWallet,
+                CallbackDataKey.selectDefiWallet,
+              );
+            })();
+            break;
+          case CallbackDataKey.editWalletOfDefiWallet:
+            (() => {
+              const [defiWalletId, walletIndex] =
+                callback_data.params.split('_');
+              this.defiWalletsService.onEnterWalletOfDefiWalletName(
                 ctx,
                 defiWalletId,
                 parseInt(walletIndex),

@@ -5,7 +5,7 @@ import { Ctx, InjectBot, Message } from 'nestjs-telegraf';
 import { CommonLogger } from 'src/common/logger';
 import { Context, Scenes, Telegraf } from 'telegraf';
 import { BotService } from './bot.service';
-import { JobAction, JobStatus } from './types';
+import { CallbackDataKey, JobAction, JobStatus } from './types';
 import { InjectModel } from '@nestjs/mongoose';
 import { Job } from './schemas/job.schema';
 import { Model } from 'mongoose';
@@ -82,6 +82,8 @@ export class BotMessagesService {
               ctx,
               message,
               lastJob,
+              CallbackDataKey.defiWallets,
+              CallbackDataKey.defiWallets,
             );
             break;
           case JobAction.enterDefiWalletOrganization:
@@ -90,6 +92,8 @@ export class BotMessagesService {
                 ctx,
                 message,
                 lastJob,
+                CallbackDataKey.selectDefiWallet,
+                CallbackDataKey.defiWallets,
               );
             break;
           case JobAction.enterWalletOfDefiWalletName:
@@ -98,6 +102,8 @@ export class BotMessagesService {
                 ctx,
                 message,
                 lastJob,
+                CallbackDataKey.selectWalletOfDefiWallet,
+                CallbackDataKey.selectDefiWallet,
               );
             break;
           default:

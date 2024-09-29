@@ -67,7 +67,7 @@ export class BotDefiWalletsService {
     return `${this._cacheKeyPrefix}_${walletAddress}`;
   }
   private _templateHeader = [
-    { title: 'Wallet Organization', key: 'organization' },
+    { title: 'Organization', key: 'organization' },
     { title: 'Seed Phrase', key: 'seedPhrase' },
     { title: 'Wallet 1', key: 'wallet1' },
     { title: 'Wallet 2', key: 'wallet2' },
@@ -103,20 +103,34 @@ export class BotDefiWalletsService {
 
       const isDeleted = await this.updateDefiWallet(ctx, defiWalletId, {
         ...defiWallet,
-        wallets: defiWallet.wallets.filter((_, index) => index != walletIndex),
+        wallets: defiWallet.wallets.reduce(
+          (list, { wallet_name, private_key }, index) => {
+            if (index != walletIndex) {
+              list.push({
+                wallet_name,
+                private_key:
+                  HashieldAIRepository.instance.decryptData(private_key),
+              });
+            }
+            return list;
+          },
+          [],
+        ),
       });
 
       if (!isDeleted) {
         throw new InternalServerErrorException('Can not delete the wallet.');
       }
 
-      await this.onSelectDefiWallet(ctx, backFrom, backTo);
+      await this.onSelectDefiWallet(ctx, defiWalletId, backFrom, backTo);
 
       this.service.shortReply(ctx, `💚 Deleted successfully.`);
     } catch (error) {
       this.service.warningReply(ctx, error?.message);
 
-      CommonLogger.instance.error(`onDeleteDefiWallet error ${error?.message}`);
+      CommonLogger.instance.error(
+        `onDeleteWalletOfDefiWallet error ${error?.message}`,
+      );
     }
   }
 
@@ -150,6 +164,7 @@ export class BotDefiWalletsService {
     @Ctx() ctx: Context,
     @Message() message,
     job: Job,
+    backFrom?: CallbackDataKey,
     backTo?: CallbackDataKey,
   ): Promise<JobStatus> {
     const { chat } = ctx;
@@ -172,22 +187,19 @@ export class BotDefiWalletsService {
         throw new BadRequestException('The wallet name is invalid.');
       }
 
-      const isUpdated = await this.updateDefiWallet(ctx, defiWalletId, {
-        ...defiWallet,
-        wallets: defiWallet.wallets.map((wallet, index) => {
-          if (index == walletIndex) {
-            return {
-              ...wallet,
-              wallet_name: message.text,
-            };
-          }
-          return wallet;
-        }),
-      });
+      // const isUpdated = await this.updateDefiWallet(ctx, defiWalletId, {
+      //   ...defiWallet,
+      //   wallets: defiWallet.wallets.map((wallet, index) => ({
+      //     private_key: HashieldAIRepository.instance.decryptData(
+      //       wallet.private_key,
+      //     ),
+      //     wallet_name: index == walletIndex ? message.text : wallet.wallet_name,
+      //   })),
+      // });
 
-      if (!isUpdated) {
-        throw new InternalServerErrorException('Can not update the wallet.');
-      }
+      // if (!isUpdated) {
+      //   throw new InternalServerErrorException('Can not update the wallet.');
+      // }
 
       const wallet = defiWallet.wallets[walletIndex];
 
@@ -229,7 +241,8 @@ export class BotDefiWalletsService {
   public async onEnterWalletOfDefiWalletName(
     @Ctx() ctx,
     defiWalletId: string,
-    backFrom: CallbackDataKey,
+    walletIndex: number,
+    backFrom?: CallbackDataKey,
     backTo?: CallbackDataKey,
   ) {
     try {
@@ -246,10 +259,11 @@ export class BotDefiWalletsService {
         },
       );
 
-      const params: EnterDefiWalletOrganizationJobParams = {
+      const params: EnterWalletOfDefiWalletNameJobParams = {
         deleteMessageId: deleteMessage.message_id,
         editMessageId: editMessage.message_id,
         defiWalletId,
+        walletIndex,
       };
 
       const job = await this.jobModel.create({
@@ -288,6 +302,15 @@ export class BotDefiWalletsService {
         inline_keyboard: [
           [
             {
+              text: '✏️ Name',
+              callback_data: new CallbackData<string>(
+                CallbackDataKey.editWalletOfDefiWallet,
+                `${defiWallet._id}_${walletIndex}`,
+              ).toJSON(),
+            },
+          ],
+          [
+            {
               text: '🗑 Delete',
               callback_data: new CallbackData<string>(
                 CallbackDataKey.deleteWalletOfDefiWallet,
@@ -302,7 +325,7 @@ export class BotDefiWalletsService {
               ).toJSON(),
             },
           ],
-          this.helperService.buildBacKAndCloseButtons(backTo),
+          this.helperService.buildBacKAndCloseButtons(backTo, defiWallet._id),
         ],
       },
     };
@@ -388,7 +411,7 @@ export class BotDefiWalletsService {
         );
       }
 
-      await this.onDefiWallets(ctx, backFrom);
+      await this.onDefiWallets(ctx, backFrom, backTo);
 
       this.service.shortReply(ctx, `💚 Deleted successfully.`);
     } catch (error) {
@@ -421,6 +444,7 @@ export class BotDefiWalletsService {
     @Ctx() ctx: Context,
     @Message() message,
     job: Job,
+    backFrom?: CallbackDataKey,
     backTo?: CallbackDataKey,
   ): Promise<JobStatus> {
     const { chat } = ctx;
@@ -430,6 +454,7 @@ export class BotDefiWalletsService {
       ) as EnterDefiWalletOrganizationJobParams;
 
       const defiWallet = await this.getDefiWallet(ctx, defiWalletId);
+
       if (!defiWallet) {
         throw new BadRequestException('The defi wallet is not found.');
       }
@@ -446,6 +471,10 @@ export class BotDefiWalletsService {
 
       const isUpdated = await this.updateDefiWallet(ctx, defiWalletId, {
         ...defiWallet,
+        wallets: defiWallet.wallets.map(({ wallet_name, private_key }) => ({
+          wallet_name,
+          private_key: HashieldAIRepository.instance.decryptData(private_key),
+        })),
         organization: message.text,
       });
 
@@ -486,7 +515,7 @@ export class BotDefiWalletsService {
   public async onEnterDefiWalletOrganization(
     @Ctx() ctx,
     defiWalletId: string,
-    backFrom: CallbackDataKey,
+    backFrom?: CallbackDataKey,
     backTo?: CallbackDataKey,
   ) {
     try {
@@ -545,7 +574,7 @@ export class BotDefiWalletsService {
           ...defiWallet.wallets.map((wallet, index) => {
             return [
               {
-                text: `Wallet: ${wallet.wallet_name}`,
+                text: `Wallet ${index + 1}: ${wallet.wallet_name}`,
                 callback_data: new CallbackData<string>(
                   CallbackDataKey.selectWalletOfDefiWallet,
                   `${defiWallet._id}_${index}`,
@@ -661,7 +690,7 @@ export class BotDefiWalletsService {
             h.startsWith('Wallet'),
           );
           return {
-            organization: itemD['Wallet Organization'],
+            organization: itemD['Organization'],
             seed_phrase: itemD['Seed Phrase'],
             wallets: walletHs.reduce(
               (
@@ -689,7 +718,19 @@ export class BotDefiWalletsService {
         );
       }
 
-      this.onDefiWallets(ctx, backFrom, backTo);
+      const defiWallets = await this.getDefiWallets(ctx);
+
+      const reply = this.helperService.buildLinesMessage([
+        `<b>👝 Defi Wallets</b>`,
+      ]);
+
+      this.service.editMessage(
+        ctx,
+        chat.id,
+        editMessageId,
+        reply,
+        this.buildDefiWalletsOptions(ctx, defiWallets, backTo),
+      );
 
       this.service.deleteMessage(ctx, chat.id, deleteMessageId);
 
@@ -902,7 +943,7 @@ export class BotDefiWalletsService {
       params.some(({ organization, wallets }) => {
         return (
           !organization ||
-          !wallets.some(
+          wallets.some(
             ({ wallet_name, private_key }) =>
               !wallet_name || !validator.isWalletPrivateKey(private_key),
           )
@@ -950,7 +991,7 @@ export class BotDefiWalletsService {
       [defiWalletId],
     );
 
-    if (isDeleted) this.getDefiWallets(ctx, true);
+    if (isDeleted) await this.getDefiWallets(ctx, true);
 
     return isDeleted;
   }
@@ -971,7 +1012,7 @@ export class BotDefiWalletsService {
     if (
       (params.organization != undefined && !params.organization) ||
       (params.wallets != undefined &&
-        !params.wallets.some(
+        params.wallets.some(
           ({ wallet_name, private_key }) =>
             !wallet_name || !validator.isWalletPrivateKey(private_key),
         ))
@@ -985,7 +1026,7 @@ export class BotDefiWalletsService {
       params,
     );
 
-    if (isUpdated) this.getDefiWallets(ctx, true);
+    if (isUpdated) await this.getDefiWallets(ctx, true);
 
     return isUpdated;
   }

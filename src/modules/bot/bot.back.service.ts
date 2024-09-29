@@ -39,7 +39,8 @@ export class BotBackService {
       if (ctx.update && ctx.update.callback_query) {
         const { data } = ctx.update.callback_query;
         const callback_data = CallbackData.fromJSON<CallbackDataKey>(data);
-        switch (callback_data.params) {
+        const [backTo, ...params] = callback_data.params.split('_');
+        switch (backTo as CallbackDataKey) {
           case CallbackDataKey.menu:
             this.menuService.onMenu(ctx, callback_data.key);
             break;
@@ -48,9 +49,6 @@ export class BotBackService {
             break;
           case CallbackDataKey.wallets:
             this.walletsService.onWallets(ctx, callback_data.key);
-            break;
-          case CallbackDataKey.selectWallet:
-            this.walletsService.onSelectWallet(ctx, callback_data.key);
             break;
           case CallbackDataKey.createWallet:
             this.walletsService.onCreateWallet(
@@ -66,7 +64,13 @@ export class BotBackService {
             this.defiWalletsService.onDefiWallets(ctx, callback_data.key);
             break;
           case CallbackDataKey.selectDefiWallet:
-            this.defiWalletsService.onSelectDefiWallet(ctx, callback_data.key);
+            const [defiWalletId] = params;
+            this.defiWalletsService.onSelectDefiWallet(
+              ctx,
+              defiWalletId,
+              callback_data.key,
+              CallbackDataKey.defiWallets,
+            );
             break;
           case CallbackDataKey.autoFill:
             this.autoFillService.onAutoFill(ctx, callback_data.key);
