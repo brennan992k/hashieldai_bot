@@ -107,17 +107,14 @@ export class BotMenuService {
       const { from } = ctx;
 
       const reply = this.helperService.buildLinesMessage([
-        `🌟 Welcome <b>@${from.username}</b> to HashieldAI! 🌟\n`,
-        `Your ultimate Telegram wallet bot, designed for speed, privacy, and seamless transactions! 🚀\n`,
-        `<b>Key Features:</b>\n`,
-        `⚡️Lightning Fast Transactions : Experience the quickest way to manage your crypto.`,
-        `🛡Account Abstraction : Enjoy simplified wallet management without compromising security.`,
-        `🔒Privacy Trading : Trade confidently with advanced privacy features to protect your assets.\n`,
-        `<b>Getting Started:</b>\n`,
-        `1. Create Your Wallet: Just follow the prompts to set up your secure wallet.`,
-        `2. Deposit Funds: Easily add crypto to your wallet for quick access.`,
-        `3. Start Trading: Explore our trading options with enhanced privacy!\n`,
-        `Let’s make your crypto journey smooth and secure! 🌐💰\n`,
+        `Welcome to <b>HASHIELD AI</b>! 🤖🔒\n`,
+        `Your personal AI assistant for ultimate security and convenience!\n`,
+        `✨ Features:\n`,
+        `<b>1. Password Management:</b> Save, auto-fill, and manage your web2 login credentials effortlessly.`,
+        `<b>2. Seed Phrase & Private Key Protection:</b> Securely store your seed phrases and private keys with cutting-edge encryption.`,
+        `<b>3. Personal Data Vault:</b> Protect your sensitive data in an encrypted environment for peace of mind.\n`,
+        `With HASHIELD AI, experience enhanced security and seamless access across all your accounts. Start your journey to a safer digital experience today! 💡🔐\n`,
+        `Type /start to begin!\n`,
       ]);
 
       await this.helperService.editOrSendMessage(
