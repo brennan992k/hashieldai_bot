@@ -187,19 +187,19 @@ export class BotDefiWalletsService {
         throw new BadRequestException('The wallet name is invalid.');
       }
 
-      // const isUpdated = await this.updateDefiWallet(ctx, defiWalletId, {
-      //   ...defiWallet,
-      //   wallets: defiWallet.wallets.map((wallet, index) => ({
-      //     private_key: HashieldAIRepository.instance.decryptData(
-      //       wallet.private_key,
-      //     ),
-      //     wallet_name: index == walletIndex ? message.text : wallet.wallet_name,
-      //   })),
-      // });
+      const isUpdated = await this.updateDefiWallet(ctx, defiWalletId, {
+        ...defiWallet,
+        wallets: defiWallet.wallets.map((wallet, index) => ({
+          private_key: HashieldAIRepository.instance.decryptData(
+            wallet.private_key,
+          ),
+          wallet_name: index == walletIndex ? message.text : wallet.wallet_name,
+        })),
+      });
 
-      // if (!isUpdated) {
-      //   throw new InternalServerErrorException('Can not update the wallet.');
-      // }
+      if (!isUpdated) {
+        throw new InternalServerErrorException('Can not update the wallet.');
+      }
 
       const wallet = defiWallet.wallets[walletIndex];
 
