@@ -548,7 +548,7 @@ export class BotWeb2LoginsService {
   ) {
     try {
       const documentPath = await XLSXUtils.instance.createFile(
-        'defi-wallets-template',
+        'credentials-template',
         this._templateHeader,
         this._templateData,
       );
