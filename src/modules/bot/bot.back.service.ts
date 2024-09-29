@@ -65,6 +65,9 @@ export class BotBackService {
           case CallbackDataKey.defiWallets:
             this.defiWalletsService.onDefiWallets(ctx, callback_data.key);
             break;
+          case CallbackDataKey.selectDefiWallet:
+            this.defiWalletsService.onSelectDefiWallet(ctx, callback_data.key);
+            break;
           case CallbackDataKey.autoFill:
             this.autoFillService.onAutoFill(ctx, callback_data.key);
             break;

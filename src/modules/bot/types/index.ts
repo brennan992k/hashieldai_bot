@@ -1,27 +1,74 @@
+export enum MenuKey {
+  wallets = 'mw',
+  web2Logins = 'mwl',
+  defiWallets = 'mdw',
+  autoFill = 'maf',
+  passwordHealth = 'mph',
+  walletHealth = 'mwh',
+  about = 'ma',
+}
+
+export enum WalletKey {
+  createWallet = 'wcrw',
+  selectWallet = 'wsw',
+  refreshWallets = 'wrws',
+  connectWallet = 'wcow',
+  generateWallet = 'wgw',
+  setWalletDefault = 'wswd',
+  refreshWallet = 'wrw',
+  deleteWallet = 'wdw',
+}
+
+export enum DefiWalletKey {
+  templateDefiWallets = 'dwtdws',
+  importDefiWallets = 'dwidws',
+  refreshDefiWallets = 'dwrdws',
+  selectDefiWallet = 'dwsdw',
+  refreshDefiWallet = 'dwrdw',
+  editDefiWallet = 'dwedw',
+  deleteDefiWallet = 'dwddw',
+  selectWalletOfDefiWallet = 'dwswodw',
+  deleteWalletOfDefiWallet = 'dwdwodw',
+  refreshWalletOfDefiWallet = 'dwrwodw',
+}
+
 export enum CallbackDataKey {
   none = 'none',
   menu = 'menu',
-  wallets = 'wallets',
-  web2Logins = 'web2Logins',
-  defiWallets = 'defiWallets',
-  autoFill = 'autoFill',
-  passwordHealth = 'Password Health',
-  walletHealth = 'WalletHealth',
-  about = 'about',
   close = 'close',
   back = 'back',
-  createWallet = 'createWallet',
-  selectWallet = 'selectWallet',
-  refreshWallets = 'refreshWallets',
-  connectWallet = 'connectWallet',
-  generateWallet = 'generateWallet',
-  setWalletDefault = 'setWalletDefault',
-  refreshWallet = 'refreshWallet',
-  deleteWallet = 'deleteWallet',
+
+  wallets = MenuKey.wallets,
+  web2Logins = MenuKey.web2Logins,
+  defiWallets = MenuKey.defiWallets,
+  autoFill = MenuKey.autoFill,
+  passwordHealth = MenuKey.passwordHealth,
+  walletHealth = MenuKey.walletHealth,
+  about = MenuKey.about,
+
+  createWallet = WalletKey.createWallet,
+  selectWallet = WalletKey.selectWallet,
+  refreshWallets = WalletKey.refreshWallets,
+  connectWallet = WalletKey.connectWallet,
+  generateWallet = WalletKey.generateWallet,
+  setWalletDefault = WalletKey.setWalletDefault,
+  refreshWallet = WalletKey.refreshWallet,
+  deleteWallet = WalletKey.deleteWallet,
+
   addNewCredential = 'addNewCredential',
   refreshWeb2Logins = 'refreshWeb2Logins',
-  addNewDefiWallet = 'addNewDefiWallet',
-  refreshDefiWallets = 'refreshDefiWallets',
+
+  templateDefiWallets = DefiWalletKey.templateDefiWallets,
+  importDefiWallets = DefiWalletKey.importDefiWallets,
+  refreshDefiWallets = DefiWalletKey.refreshDefiWallets,
+  selectDefiWallet = DefiWalletKey.selectDefiWallet,
+  refreshDefiWallet = DefiWalletKey.refreshDefiWallet,
+  editDefiWallet = DefiWalletKey.editDefiWallet,
+  deleteDefiWallet = DefiWalletKey.deleteDefiWallet,
+  selectWalletOfDefiWallet = DefiWalletKey.selectWalletOfDefiWallet,
+  deleteWalletOfDefiWallet = DefiWalletKey.deleteWalletOfDefiWallet,
+  refreshWalletOfDefiWallet = DefiWalletKey.refreshWalletOfDefiWallet,
+
   updateProfile = 'updateProfile',
   refreshAutoFill = 'refreshAutoFill',
 }
@@ -30,6 +77,9 @@ export enum JobAction {
   enterUserId = 'enterUserId',
   enterWalletName = 'enterWalletName',
   enterWalletPrivateKey = 'enterWalletPrivateKey',
+  enterDefiWalletOrganization = 'enterDefiWalletOrganization',
+  enterWalletOfDefiWalletName = 'enterWalletOfDefiWalletName',
+  importDefiWallets = 'importDefiWallets',
 }
 
 export enum JobStatus {

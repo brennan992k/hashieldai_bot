@@ -1,6 +1,6 @@
 import { Web3Address } from 'src/app.type';
 import { BaseRepository } from './base.repository';
-import CryptoJS from 'crypto-js';
+import * as CryptoJS from 'crypto-js';
 
 export type PasswordHealth = {
   id: string;

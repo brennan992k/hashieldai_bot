@@ -13,6 +13,11 @@ import { BotWalletsService } from './bot.wallets.service';
 import { Message as IMessage } from 'telegraf/typings/core/types/typegram';
 import { BotAuthService } from './bot.auth.service';
 import { BotTokensService } from './bot.tokens.service';
+import { BotWeb2LoginsService } from './bot.web2-logins.service';
+import { BotDefiWalletsService } from './bot.defi-wallets.service';
+import { BotAutoFillService } from './bot.auto-fill.service';
+import { BotPasswordHealthService } from './bot.password-health.service';
+import { BotWalletHealthService } from './bot.wallet-health.service';
 
 @Injectable()
 export class BotMessagesService {
@@ -25,6 +30,11 @@ export class BotMessagesService {
     protected readonly service: BotService,
     protected readonly walletsService: BotWalletsService,
     protected readonly authService: BotAuthService,
+    protected readonly web2LoginsService: BotWeb2LoginsService,
+    protected readonly defiWalletsService: BotDefiWalletsService,
+    protected readonly autoFillService: BotAutoFillService,
+    protected readonly passwordHealthService: BotPasswordHealthService,
+    protected readonly walletHealthService: BotWalletHealthService,
     protected readonly tokensService: BotTokensService,
   ) {}
 
@@ -66,6 +76,29 @@ export class BotMessagesService {
               message,
               lastJob,
             );
+            break;
+          case JobAction.importDefiWallets:
+            status = await this.defiWalletsService.onImportedDefiWallets(
+              ctx,
+              message,
+              lastJob,
+            );
+            break;
+          case JobAction.enterDefiWalletOrganization:
+            status =
+              await this.defiWalletsService.onEnteredDefiWalletOrganization(
+                ctx,
+                message,
+                lastJob,
+              );
+            break;
+          case JobAction.enterWalletOfDefiWalletName:
+            status =
+              await this.defiWalletsService.onEnteredWalletOfDefiWalletName(
+                ctx,
+                message,
+                lastJob,
+              );
             break;
           default:
             break;

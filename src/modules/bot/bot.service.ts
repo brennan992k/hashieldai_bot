@@ -5,8 +5,9 @@ import { Ctx, InjectBot, Message } from 'nestjs-telegraf';
 // import { CommonLogger } from 'src/common/logger';
 import { Context, Scenes, Telegraf } from 'telegraf';
 import { BotAuthService } from './bot.auth.service';
-import { ExtraPoll } from 'telegraf/typings/telegram-types';
+import { ExtraDocument, ExtraPoll } from 'telegraf/typings/telegram-types';
 import { CommonLogger } from 'src/common/logger';
+import { File, InputFile } from 'telegraf/typings/core/types/typegram';
 
 @Injectable()
 export class BotService {
@@ -32,6 +33,40 @@ export class BotService {
     authUrl: string;
     telegramBot: string;
   };
+
+  public async sendDocument(
+    @Ctx() ctx: Context,
+    document: string | InputFile,
+    extra?: ExtraDocument,
+  ) {
+    try {
+      return await ctx.sendDocument(document, extra);
+    } catch (error) {
+      // CommonLogger.instance.error(
+      //   `sendDocument error ${this._extractErrorMessage(error)}`,
+      // );
+    }
+  }
+
+  public async getFile(@Ctx() ctx: Context, fileId: string) {
+    try {
+      return await ctx.telegram.getFile(fileId);
+    } catch (error) {
+      // CommonLogger.instance.error(
+      //   `getFile error ${this._extractErrorMessage(error)}`,
+      // );
+    }
+  }
+
+  public async getFileLink(@Ctx() ctx: Context, fileId: string | File) {
+    try {
+      return await ctx.telegram.getFileLink(fileId);
+    } catch (error) {
+      // CommonLogger.instance.error(
+      //   `getFileLink error ${this._extractErrorMessage(error)}`,
+      // );
+    }
+  }
 
   public async onClose(@Ctx() ctx: Context, @Message() message) {
     try {

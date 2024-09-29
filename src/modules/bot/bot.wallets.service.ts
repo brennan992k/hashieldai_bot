@@ -641,9 +641,9 @@ export class BotWalletsService {
   }
 
   private buildWalletsOptions(
+    @Ctx() ctx: Context,
     wallets: Wallet[],
     balances: Record<string, number>,
-    from: User,
     backTo?: CallbackDataKey,
   ) {
     return {
@@ -714,8 +714,6 @@ export class BotWalletsService {
     try {
       if (await this.authService.onEnterAccessToken(ctx)) return;
 
-      const { from } = ctx;
-
       const wallets = await this.getWallets(ctx);
 
       const balances = await this.getBalances(wallets);
@@ -723,7 +721,7 @@ export class BotWalletsService {
       await this.helperService.editOrSendMessage(
         ctx,
         `<b>💰Wallets - You have ${wallets.length} wallets</b>`,
-        this.buildWalletsOptions(wallets, balances, from, backTo),
+        this.buildWalletsOptions(ctx, wallets, balances, backTo),
         backFrom,
       );
     } catch (error) {

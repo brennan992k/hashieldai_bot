@@ -26,35 +26,6 @@ export const shortenWalletAddress = (
   return `${start}...${end}`;
 };
 
-const PREFIX_SECRET_KEY = 'hashieldai';
-
-export const buildHashieldAISecretKey = (data: {
-  amount: bigint;
-  publicKey: string;
-  privateKey: string;
-}) => {
-  return `${PREFIX_SECRET_KEY}:${data.amount}:${data.publicKey}:${data.privateKey}`;
-};
-
-export const parseHashieldAISecretKey = (secretKey: string) => {
-  const parts = secretKey.split(':');
-  return {
-    prefix: parts[0],
-    amount: parts[1],
-    publicKey: parts[2],
-    privateKey: parts[3],
-  };
-};
-
-export const isValidHashieldAISecretKey = (secretKey: string) => {
-  const { prefix, amount, publicKey, privateKey } =
-    parseHashieldAISecretKey(secretKey);
-  if (prefix != PREFIX_SECRET_KEY) return false;
-  if (isNaN(parseFloat(amount))) return false;
-  if (!publicKey || !privateKey) return false;
-  return true;
-};
-
 export const withDecimals = (amount: number, decimals: number) => {
   if (!amount) return BigInt(0);
   return BigInt(

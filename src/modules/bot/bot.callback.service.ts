@@ -27,9 +27,9 @@ export class BotCallbackService {
     protected readonly walletsService: BotWalletsService,
     protected readonly web2LoginsService: BotWeb2LoginsService,
     protected readonly defiWalletsService: BotDefiWalletsService,
+    protected readonly autoFillService: BotAutoFillService,
     protected readonly passwordHealthService: BotPasswordHealthService,
     protected readonly walletHealthService: BotWalletHealthService,
-    protected readonly autoFillService: BotAutoFillService,
     protected readonly backService: BotBackService,
   ) {}
 
@@ -99,6 +99,81 @@ export class BotCallbackService {
             break;
           case CallbackDataKey.defiWallets:
             this.defiWalletsService.onDefiWallets(ctx);
+            break;
+          case CallbackDataKey.templateDefiWallets:
+            this.defiWalletsService.onTemplateDefiWallets(ctx);
+            break;
+          case CallbackDataKey.importDefiWallets:
+            this.defiWalletsService.onImportDefiWallets(ctx);
+            break;
+          case CallbackDataKey.refreshDefiWallets:
+            this.defiWalletsService.onRefreshDefiWallets(
+              ctx,
+              CallbackDataKey.defiWallets,
+            );
+            break;
+          case CallbackDataKey.selectDefiWallet:
+            this.defiWalletsService.onSelectDefiWallet(
+              ctx,
+              callback_data.params as string,
+              CallbackDataKey.defiWallets,
+              CallbackDataKey.defiWallets,
+            );
+            break;
+          case CallbackDataKey.refreshDefiWallet:
+            this.defiWalletsService.onRefreshDefiWallet(
+              ctx,
+              callback_data.params as string,
+              CallbackDataKey.wallets,
+              CallbackDataKey.wallets,
+            );
+            break;
+          case CallbackDataKey.deleteDefiWallet:
+            this.defiWalletsService.onDeleteDefiWallet(
+              ctx,
+              callback_data.params as string,
+              CallbackDataKey.wallets,
+              CallbackDataKey.wallets,
+            );
+            break;
+          case CallbackDataKey.selectWalletOfDefiWallet:
+            (() => {
+              const [defiWalletId, walletIndex] =
+                callback_data.params.split('_');
+              this.defiWalletsService.onSelectWalletOfDefiWallet(
+                ctx,
+                defiWalletId,
+                parseInt(walletIndex),
+                CallbackDataKey.selectDefiWallet,
+                CallbackDataKey.selectDefiWallet,
+              );
+            })();
+            break;
+          case CallbackDataKey.refreshWalletOfDefiWallet:
+            (() => {
+              const [defiWalletId, walletIndex] =
+                callback_data.params.split('_');
+              this.defiWalletsService.onRefreshWalletOfDefiWallet(
+                ctx,
+                defiWalletId,
+                parseInt(walletIndex),
+                CallbackDataKey.selectDefiWallet,
+                CallbackDataKey.selectDefiWallet,
+              );
+            })();
+            break;
+          case CallbackDataKey.deleteWalletOfDefiWallet:
+            (() => {
+              const [defiWalletId, walletIndex] =
+                callback_data.params.split('_');
+              this.defiWalletsService.onDeleteWalletOfDefiWallet(
+                ctx,
+                defiWalletId,
+                parseInt(walletIndex),
+                CallbackDataKey.selectDefiWallet,
+                CallbackDataKey.selectDefiWallet,
+              );
+            })();
             break;
           case CallbackDataKey.autoFill:
             this.autoFillService.onAutoFill(ctx);
