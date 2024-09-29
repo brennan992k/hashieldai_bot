@@ -43,7 +43,7 @@ type EnterDefiWalletOrganizationJobParams = {
   defiWalletId: string;
 };
 
-type ImportDefiWalletJobParams = {
+type ImportDefiWalletsJobParams = {
   deleteMessageId: number;
   editMessageId: number;
 };
@@ -63,9 +63,11 @@ export class BotDefiWalletsService {
   ) {}
 
   private _cacheKeyPrefix = 'DEFI_WALLETS';
+
   private _buildCacheKey(walletAddress: Web3Address) {
     return `${this._cacheKeyPrefix}_${walletAddress}`;
   }
+
   private _templateHeader = [
     { title: 'Organization', key: 'organization' },
     { title: 'Seed Phrase', key: 'seedPhrase' },
@@ -73,6 +75,7 @@ export class BotDefiWalletsService {
     { title: 'Wallet 2', key: 'wallet2' },
     { title: 'Wallet 3', key: 'wallet3' },
   ];
+
   private _templateData = [
     {
       organization: 'Your organization',
@@ -586,7 +589,7 @@ export class BotDefiWalletsService {
             {
               text: '✏️ Organization',
               callback_data: new CallbackData<string>(
-                CallbackDataKey.editDefiWallet,
+                CallbackDataKey.editDefiWalletOrganization,
                 `${defiWallet._id.toString()}`,
               ).toJSON(),
             },
@@ -674,7 +677,7 @@ export class BotDefiWalletsService {
 
       const { deleteMessageId, editMessageId } = JSON.parse(
         job.params,
-      ) as ImportDefiWalletJobParams;
+      ) as ImportDefiWalletsJobParams;
 
       if (message.from.id != job.telegramUserId) {
         throw new BadRequestException(
@@ -767,7 +770,7 @@ export class BotDefiWalletsService {
         },
       );
 
-      const params: ImportDefiWalletJobParams = {
+      const params: ImportDefiWalletsJobParams = {
         deleteMessageId: deleteMessage.message_id,
         editMessageId: editMessage.message_id,
       };

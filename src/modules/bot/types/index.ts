@@ -25,12 +25,27 @@ export enum DefiWalletKey {
   refreshDefiWallets = 'dwrdws',
   selectDefiWallet = 'dwsdw',
   refreshDefiWallet = 'dwrdw',
-  editDefiWallet = 'dwedw',
+  editDefiWalletOrganization = 'dwedwo',
   deleteDefiWallet = 'dwddw',
   selectWalletOfDefiWallet = 'dwswodw',
   deleteWalletOfDefiWallet = 'dwdwodw',
   refreshWalletOfDefiWallet = 'dwrwodw',
   editWalletOfDefiWallet = 'dwewodw',
+}
+
+export enum Web2LoginKey {
+  selectCredential = 'w2lsc',
+  templateCredentials = 'w2ltc',
+  importCredentials = 'w2lic',
+  refreshWeb2Logins = 'w2lrw2l',
+  editCredentialWebsites = 'w2lecws',
+  editCredentialUsername = 'w2lecun',
+  editCredentialPassword = 'w2lecp',
+  editCredentialAutoLogin = 'w2lecal',
+  editCredentialAutoFill = 'w2lecaf',
+  editCredentialProtectItem = 'w2lecpi',
+  deleteCredential = 'w2ldc',
+  refreshCredential = 'w2lrc',
 }
 
 export enum CallbackDataKey {
@@ -56,15 +71,25 @@ export enum CallbackDataKey {
   refreshWallet = WalletKey.refreshWallet,
   deleteWallet = WalletKey.deleteWallet,
 
-  addNewCredential = 'addNewCredential',
-  refreshWeb2Logins = 'refreshWeb2Logins',
+  selectCredential = Web2LoginKey.selectCredential,
+  templateCredentials = Web2LoginKey.templateCredentials,
+  importCredentials = Web2LoginKey.importCredentials,
+  refreshWeb2Logins = Web2LoginKey.refreshWeb2Logins,
+  editCredentialWebsites = Web2LoginKey.editCredentialWebsites,
+  editCredentialUsername = Web2LoginKey.editCredentialUsername,
+  editCredentialPassword = Web2LoginKey.editCredentialPassword,
+  editCredentialAutoLogin = Web2LoginKey.editCredentialAutoLogin,
+  editCredentialAutoFill = Web2LoginKey.editCredentialAutoFill,
+  editCredentialProtectItem = Web2LoginKey.editCredentialProtectItem,
+  deleteCredential = Web2LoginKey.deleteCredential,
+  refreshCredential = Web2LoginKey.refreshCredential,
 
   templateDefiWallets = DefiWalletKey.templateDefiWallets,
   importDefiWallets = DefiWalletKey.importDefiWallets,
   refreshDefiWallets = DefiWalletKey.refreshDefiWallets,
   selectDefiWallet = DefiWalletKey.selectDefiWallet,
   refreshDefiWallet = DefiWalletKey.refreshDefiWallet,
-  editDefiWallet = DefiWalletKey.editDefiWallet,
+  editDefiWalletOrganization = DefiWalletKey.editDefiWalletOrganization,
   deleteDefiWallet = DefiWalletKey.deleteDefiWallet,
   selectWalletOfDefiWallet = DefiWalletKey.selectWalletOfDefiWallet,
   deleteWalletOfDefiWallet = DefiWalletKey.deleteWalletOfDefiWallet,
@@ -82,6 +107,7 @@ export enum JobAction {
   enterDefiWalletOrganization = 'enterDefiWalletOrganization',
   enterWalletOfDefiWalletName = 'enterWalletOfDefiWalletName',
   importDefiWallets = 'importDefiWallets',
+  importCredentials = 'importCredentials',
 }
 
 export enum JobStatus {

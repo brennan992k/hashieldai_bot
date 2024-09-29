@@ -97,6 +97,53 @@ export class BotCallbackService {
           case CallbackDataKey.web2Logins:
             this.web2LoginsService.onWeb2Logins(ctx);
             break;
+          case CallbackDataKey.templateCredentials:
+            this.web2LoginsService.onTemplateCredentials(ctx);
+            break;
+          case CallbackDataKey.importCredentials:
+            this.web2LoginsService.onImportCredentials(ctx);
+            break;
+          case CallbackDataKey.refreshWeb2Logins:
+            this.web2LoginsService.onRefreshWeb2Logins(
+              ctx,
+              CallbackDataKey.web2Logins,
+            );
+            break;
+          case CallbackDataKey.selectCredential:
+            this.web2LoginsService.onSelectCredential(
+              ctx,
+              callback_data.params as string,
+              CallbackDataKey.web2Logins,
+              CallbackDataKey.web2Logins,
+            );
+            break;
+          case CallbackDataKey.refreshCredential:
+            this.web2LoginsService.onRefreshCredential(
+              ctx,
+              callback_data.params as string,
+              CallbackDataKey.selectCredential,
+              CallbackDataKey.web2Logins,
+            );
+            break;
+          case CallbackDataKey.deleteCredential:
+            this.web2LoginsService.onDeleteCredential(
+              ctx,
+              callback_data.params as string,
+              CallbackDataKey.selectCredential,
+            );
+            break;
+          case CallbackDataKey.editCredentialWebsites:
+            break;
+          case CallbackDataKey.editCredentialUsername:
+            break;
+          case CallbackDataKey.editCredentialPassword:
+            break;
+          case CallbackDataKey.editCredentialAutoLogin:
+            break;
+          case CallbackDataKey.editCredentialAutoFill:
+            break;
+          case CallbackDataKey.editCredentialProtectItem:
+            break;
           case CallbackDataKey.defiWallets:
             this.defiWalletsService.onDefiWallets(ctx);
             break;
@@ -135,7 +182,7 @@ export class BotCallbackService {
               CallbackDataKey.selectDefiWallet,
             );
             break;
-          case CallbackDataKey.editDefiWallet:
+          case CallbackDataKey.editDefiWalletOrganization:
             this.defiWalletsService.onEnterDefiWalletOrganization(
               ctx,
               callback_data.params as string,

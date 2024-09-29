@@ -106,6 +106,15 @@ export class BotMessagesService {
                 CallbackDataKey.selectDefiWallet,
               );
             break;
+          case JobAction.importCredentials:
+            status = await this.web2LoginsService.onImportedCredentials(
+              ctx,
+              message,
+              lastJob,
+              CallbackDataKey.web2Logins,
+              CallbackDataKey.web2Logins,
+            );
+            break;
           default:
             break;
         }
