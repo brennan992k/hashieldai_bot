@@ -578,12 +578,6 @@ export class BotDefiWalletsService {
         job.params,
       ) as ImportDefiWalletsJobParams;
 
-      if (message.from.id != job.telegramUserId) {
-        throw new BadRequestException(
-          'Account telegram is not compare with owner message.',
-        );
-      }
-
       const file = await this.service.getFileLink(ctx, fileId);
       const rawData = await XLSXUtils.instance.readFileFromURL(file.href);
       const params: Array<DefiWalletParams> = rawData.map<DefiWalletParams>(

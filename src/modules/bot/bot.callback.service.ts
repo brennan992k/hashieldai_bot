@@ -15,6 +15,7 @@ import { BotDefiWalletsService } from './bot.defi-wallets.service';
 import { BotPasswordHealthService } from './bot.password-health.service';
 import { BotWalletHealthService } from './bot.wallet-health.service';
 import { BotAutoFillService } from './bot.auto-fill.service';
+import { BotMenuService } from './bot.menu.service';
 
 @Injectable()
 export class BotCallbackService {
@@ -23,6 +24,7 @@ export class BotCallbackService {
     protected readonly bot: Telegraf<Scenes.SceneContext>,
     protected readonly configService: ConfigService,
     protected readonly service: BotService,
+    protected readonly menuService: BotMenuService,
     protected readonly aboutService: BotAboutService,
     protected readonly walletsService: BotWalletsService,
     protected readonly web2LoginsService: BotWeb2LoginsService,
@@ -37,6 +39,37 @@ export class BotCallbackService {
     try {
       if (ctx.update && ctx.update.callback_query) {
         const { data, message } = ctx.update.callback_query;
+        const callback_data = CallbackData.fromJSON<any>(data);
+        switch (callback_data.key) {
+          case CallbackDataKey.menu:
+            this.menuService.onMenu(ctx);
+            break;
+          case CallbackDataKey.about:
+            this.aboutService.onAbout(ctx);
+            break;
+          case CallbackDataKey.close:
+            this.service.onClose(ctx, message);
+            break;
+          case CallbackDataKey.back:
+            this.backService.onBackQuery(ctx);
+            break;
+          default:
+            this.onWalletCallbackQuery(ctx);
+            this.onWeb2LoginCallbackQuery(ctx);
+            this.onDefiWalletCallbackQuery(ctx);
+            this.onAutoFillCallbackQuery(ctx);
+            break;
+        }
+      }
+    } catch (error) {
+      CommonLogger.instance.error(`onCallbackQuery error ${error?.message}`);
+    }
+  }
+
+  async onWalletCallbackQuery(@Ctx() ctx) {
+    try {
+      if (ctx.update && ctx.update.callback_query) {
+        const { data } = ctx.update.callback_query;
         const callback_data = CallbackData.fromJSON<any>(data);
         switch (callback_data.key) {
           case CallbackDataKey.wallets:
@@ -76,13 +109,14 @@ export class BotCallbackService {
             this.walletsService.onSetWalletDefault(
               ctx,
               callback_data.params as string,
+              CallbackDataKey.selectWallet,
             );
             break;
           case CallbackDataKey.refreshWallet:
             this.walletsService.onRefreshWallet(
               ctx,
               callback_data.params as string,
-              CallbackDataKey.wallets,
+              CallbackDataKey.selectWallet,
               CallbackDataKey.wallets,
             );
             break;
@@ -90,10 +124,27 @@ export class BotCallbackService {
             this.walletsService.onDeleteWallet(
               ctx,
               callback_data.params as string,
-              CallbackDataKey.wallets,
+              CallbackDataKey.selectWallet,
               CallbackDataKey.wallets,
             );
             break;
+          default:
+            break;
+        }
+      }
+    } catch (error) {
+      CommonLogger.instance.error(
+        `onWalletCallbackQuery error ${error?.message}`,
+      );
+    }
+  }
+
+  async onWeb2LoginCallbackQuery(@Ctx() ctx) {
+    try {
+      if (ctx.update && ctx.update.callback_query) {
+        const { data, message } = ctx.update.callback_query;
+        const callback_data = CallbackData.fromJSON<any>(data);
+        switch (callback_data.key) {
           case CallbackDataKey.web2Logins:
             this.web2LoginsService.onWeb2Logins(ctx);
             break;
@@ -146,6 +197,23 @@ export class BotCallbackService {
               CallbackDataKey.selectCredential,
             );
             break;
+          default:
+            break;
+        }
+      }
+    } catch (error) {
+      CommonLogger.instance.error(
+        `onWeb2LoginCallbackQuery error ${error?.message}`,
+      );
+    }
+  }
+
+  async onDefiWalletCallbackQuery(@Ctx() ctx) {
+    try {
+      if (ctx.update && ctx.update.callback_query) {
+        const { data, message } = ctx.update.callback_query;
+        const callback_data = CallbackData.fromJSON<any>(data);
+        switch (callback_data.key) {
           case CallbackDataKey.defiWallets:
             this.defiWalletsService.onDefiWallets(ctx);
             break;
@@ -238,10 +306,33 @@ export class BotCallbackService {
               );
             })();
             break;
+          case CallbackDataKey.refreshDefiWallets:
+            this.autoFillService.onRefreshAutoFill(
+              ctx,
+              CallbackDataKey.autoFill,
+            );
+            break;
+          default:
+            break;
+        }
+      }
+    } catch (error) {
+      CommonLogger.instance.error(
+        `onDefiWalletCallbackQuery error ${error?.message}`,
+      );
+    }
+  }
+
+  async onAutoFillCallbackQuery(@Ctx() ctx) {
+    try {
+      if (ctx.update && ctx.update.callback_query) {
+        const { data, message } = ctx.update.callback_query;
+        const callback_data = CallbackData.fromJSON<any>(data);
+        switch (callback_data.key) {
           case CallbackDataKey.autoFill:
             this.autoFillService.onAutoFill(ctx);
             break;
-          case CallbackDataKey.refreshDefiWallets:
+          case CallbackDataKey.refreshAutoFill:
             this.autoFillService.onRefreshAutoFill(
               ctx,
               CallbackDataKey.autoFill,
@@ -275,27 +366,14 @@ export class BotCallbackService {
               const [cardIndex] = callback_data.params.split('_');
             })();
             break;
-          case CallbackDataKey.passwordHealth:
-            this.passwordHealthService.onPasswordHealth(ctx);
-            break;
-          case CallbackDataKey.walletHealth:
-            this.walletHealthService.onWalletHealth(ctx);
-            break;
-          case CallbackDataKey.about:
-            this.aboutService.onAbout(ctx);
-            break;
-          case CallbackDataKey.close:
-            this.service.onClose(ctx, message);
-            break;
-          case CallbackDataKey.back:
-            this.backService.onBackQuery(ctx);
-            break;
           default:
             break;
         }
       }
     } catch (error) {
-      CommonLogger.instance.error(`onCallbackQuery error ${error?.message}`);
+      CommonLogger.instance.error(
+        `onAutoFillCallbackQuery error ${error?.message}`,
+      );
     }
   }
 }

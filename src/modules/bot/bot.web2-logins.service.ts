@@ -59,6 +59,7 @@ export class BotWeb2LoginsService {
   private _buildCacheKey(walletAddress: Web3Address) {
     return `${this._cacheKeyPrefix}_${walletAddress}`;
   }
+
   private _templateHeader = [
     { title: 'Websites', key: 'websites' },
     { title: 'Email', key: 'email' },
@@ -114,7 +115,7 @@ export class BotWeb2LoginsService {
         );
       }
 
-      await this.onWeb2Logins(ctx, backFrom, backTo);
+      this.onWeb2Logins(ctx, backFrom, backTo);
 
       this.service.shortReply(ctx, `💚 Deleted successfully.`);
     } catch (error) {
@@ -131,7 +132,7 @@ export class BotWeb2LoginsService {
     backTo?: CallbackDataKey,
   ) {
     try {
-      await this.onSelectCredential(ctx, credentialId, refreshFrom, backTo);
+      this.onSelectCredential(ctx, credentialId, refreshFrom, backTo);
 
       this.service.shortReply(ctx, `💚 Refreshed successfully.`);
     } catch (error) {
@@ -262,7 +263,7 @@ export class BotWeb2LoginsService {
       const credential = await this.getCredential(ctx, credentialId);
 
       if (!credential) {
-        throw new BadRequestException('Credential is not found.');
+        throw new BadRequestException('The credential is not found.');
       }
 
       switch (type) {
@@ -302,7 +303,7 @@ export class BotWeb2LoginsService {
           const reply = (() => {
             switch (type) {
               case CallbackDataKey.updateCredentialWebsites:
-                return 'Reply to this message with your desired new websites, separated by "&"';
+                return 'Reply to this message with your desired new websites, separated by ","';
               case CallbackDataKey.updateCredentialUsername:
                 return 'Reply to this message with your desired new username';
               case CallbackDataKey.updateCredentialEmail:
@@ -336,7 +337,7 @@ export class BotWeb2LoginsService {
           });
 
           CommonLogger.instance.debug(
-            `onEnterCredentialOrganization ${JSON.stringify(job)}`,
+            `onUpdateCredential ${JSON.stringify(job)}`,
           );
 
           if (!job) {
@@ -347,9 +348,7 @@ export class BotWeb2LoginsService {
     } catch (error) {
       this.service.warningReply(ctx, error?.message);
 
-      CommonLogger.instance.error(
-        `onEnterCredentialOrganization error ${error?.message}`,
-      );
+      CommonLogger.instance.error(`onUpdateCredential error ${error?.message}`);
     }
   }
 
@@ -359,6 +358,7 @@ export class BotWeb2LoginsService {
     backTo?: CallbackDataKey,
   ) {
     const info = getWebsiteInfo(credential.url[0]);
+
     return {
       parse_mode: 'HTML',
       reply_markup: {
@@ -368,7 +368,7 @@ export class BotWeb2LoginsService {
               text: `✏️ Websites: ${info.url}`,
               callback_data: new CallbackData<string>(
                 CallbackDataKey.updateCredentialWebsites,
-                `${credential._id.toString()}`,
+                `${credential._id}`,
               ).toJSON(),
             },
           ],
@@ -379,7 +379,7 @@ export class BotWeb2LoginsService {
               }`,
               callback_data: new CallbackData<string>(
                 CallbackDataKey.updateCredentialUsername,
-                `${credential._id.toString()}`,
+                `${credential._id}`,
               ).toJSON(),
             },
           ],
@@ -388,7 +388,7 @@ export class BotWeb2LoginsService {
               text: `✏️ Email: ${credential.email ? credential.email : '--'}`,
               callback_data: new CallbackData<string>(
                 CallbackDataKey.updateCredentialUsername,
-                `${credential._id.toString()}`,
+                `${credential._id}`,
               ).toJSON(),
             },
           ],
@@ -399,7 +399,7 @@ export class BotWeb2LoginsService {
               }`,
               callback_data: new CallbackData<string>(
                 CallbackDataKey.updateCredentialPassword,
-                `${credential._id.toString()}`,
+                `${credential._id}`,
               ).toJSON(),
             },
           ],
@@ -408,7 +408,7 @@ export class BotWeb2LoginsService {
               text: `${credential.autoLogin ? '🟢' : '🔴'} Auto Login`,
               callback_data: new CallbackData<string>(
                 CallbackDataKey.updateCredentialAutoLogin,
-                `${credential._id.toString()}`,
+                `${credential._id}`,
               ).toJSON(),
             },
           ],
@@ -417,7 +417,7 @@ export class BotWeb2LoginsService {
               text: `${credential.autoFill ? '🟢' : '🔴'} Auto Fill`,
               callback_data: new CallbackData<string>(
                 CallbackDataKey.updateCredentialAutoFill,
-                `${credential._id.toString()}`,
+                `${credential._id}`,
               ).toJSON(),
             },
           ],
@@ -426,7 +426,7 @@ export class BotWeb2LoginsService {
               text: `${credential.isProtect ? '🟢' : '🔴'} Protect Item`,
               callback_data: new CallbackData<string>(
                 CallbackDataKey.updateCredentialProtectItem,
-                `${credential._id.toString()}`,
+                `${credential._id}`,
               ).toJSON(),
             },
           ],
@@ -435,18 +435,18 @@ export class BotWeb2LoginsService {
               text: '🗑 Delete',
               callback_data: new CallbackData<string>(
                 CallbackDataKey.deleteCredential,
-                `${credential._id.toString()}`,
+                `${credential._id}`,
               ).toJSON(),
             },
             {
               text: '🔄 Refresh',
               callback_data: new CallbackData<string>(
                 CallbackDataKey.refreshCredential,
-                `${credential._id.toString()}`,
+                `${credential._id}`,
               ).toJSON(),
             },
           ],
-          this.helperService.buildBacKAndCloseButtons(backTo),
+          this.helperService.buildBacKAndCloseButtons(backTo, credential._id),
         ],
       },
     };
@@ -466,9 +466,9 @@ export class BotWeb2LoginsService {
       }
 
       const info = getWebsiteInfo(credential.url[0]);
+
       const reply = this.helperService.buildLinesMessage([
-        `<b>💳 Web2 Logins - ${info.name}</b>`,
-        `<a href="${info.url}">Open Link</a>`,
+        `<b>💳 Web2 Logins - ${info.name}</b> (<a href="${info.url}">Open Link</a>)\n`,
       ]);
 
       await this.helperService.editOrSendMessage(
@@ -490,7 +490,7 @@ export class BotWeb2LoginsService {
     backTo?: CallbackDataKey,
   ) {
     try {
-      await this.onWeb2Logins(ctx, refreshFrom, backTo);
+      this.onWeb2Logins(ctx, refreshFrom, backTo);
 
       this.service.shortReply(ctx, `💚 Refreshed successfully.`);
     } catch (error) {
@@ -516,12 +516,6 @@ export class BotWeb2LoginsService {
       const { deleteMessageId, editMessageId } = JSON.parse(
         job.params,
       ) as ImportCredentialsJobParams;
-
-      if (message.from.id != job.telegramUserId) {
-        throw new BadRequestException(
-          'Account telegram is not compare with owner message.',
-        );
-      }
 
       const file = await this.service.getFileLink(ctx, fileId);
       const rawData = await XLSXUtils.instance.readFileFromURL(file.href);
@@ -553,15 +547,13 @@ export class BotWeb2LoginsService {
       const isCreated = await this.createCredentials(ctx, params);
 
       if (!isCreated) {
-        throw new InternalServerErrorException(
-          'Can not import the credentials.',
-        );
+        throw new InternalServerErrorException('Can not import credentials.');
       }
 
       const credentials = await this.getCredentials(ctx);
 
       const reply = this.helperService.buildLinesMessage([
-        `<b>👝 Defi Wallets</b>`,
+        `<b>💳 Web2 Logins</b>`,
       ]);
 
       this.service.editMessage(
@@ -579,7 +571,7 @@ export class BotWeb2LoginsService {
       this.service.warningReply(ctx, error?.message);
 
       CommonLogger.instance.error(
-        `onEnteredWalletOfCredentialName error ${error.message}`,
+        `onImportedCredentials error ${error.message}`,
       );
 
       return JobStatus.inProcess;
@@ -640,13 +632,13 @@ export class BotWeb2LoginsService {
     backTo?: CallbackDataKey,
   ) {
     try {
-      const documentPath = await XLSXUtils.instance.createFile(
+      const source = await XLSXUtils.instance.createFile(
         'credentials-template',
         this._templateHeader,
         this._templateData,
       );
 
-      const caption = this.helperService.buildLinesMessage([
+      const reply = this.helperService.buildLinesMessage([
         `<b>Instruction for Completing the Form:</b>\n`,
         `<b>1.Websites:</b> You can enter one or more websites in the provided column. If there are multiple websites, separate them with a comma (e.g., example.com, example1.ca).\n`,
         `<b>2.Auto Login, AutoFill, Protect Items:</b> These columns are used to indicate if specific features are enabled or disabled for each entry.\n`,
@@ -655,15 +647,10 @@ export class BotWeb2LoginsService {
         `<b>Please ensure all required fields are filled out accurately to facilitate seamless usage of your saved credentials.</b>`,
       ]);
 
-      await this.service.sendDocument(
-        ctx,
-        {
-          source: documentPath,
-        },
-        {
-          caption,
-        },
-      );
+      this.service.reply(ctx, reply);
+      this.service.sendDocument(ctx, {
+        source,
+      });
     } catch (error) {
       this.service.warningReply(ctx, error?.message);
 
@@ -686,7 +673,7 @@ export class BotWeb2LoginsService {
             const info = getWebsiteInfo(credential.url[0]);
             return [
               {
-                text: `${info.name} - Last used: __`,
+                text: `${info.name} - Last used: --`,
                 callback_data: new CallbackData<string>(
                   CallbackDataKey.selectCredential,
                   `${credential._id}`,
@@ -696,14 +683,14 @@ export class BotWeb2LoginsService {
           }),
           [
             {
-              text: 'Template',
+              text: 'Download Template',
               callback_data: new CallbackData<CallbackDataKey>(
                 CallbackDataKey.templateCredentials,
                 CallbackDataKey.web2Logins,
               ).toJSON(),
             },
             {
-              text: 'Import',
+              text: 'Import Data',
               callback_data: new CallbackData<CallbackDataKey>(
                 CallbackDataKey.importCredentials,
                 CallbackDataKey.web2Logins,
@@ -748,7 +735,7 @@ export class BotWeb2LoginsService {
     } catch (error) {
       this.service.warningReply(ctx, error?.message);
 
-      CommonLogger.instance.error(`onCredentials error ${error?.message}`);
+      CommonLogger.instance.error(`onWeb2Logins error ${error?.message}`);
     }
   }
 

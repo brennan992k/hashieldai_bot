@@ -68,6 +68,8 @@ export class BotMessagesService {
               ctx,
               message,
               lastJob,
+              CallbackDataKey.wallets,
+              CallbackDataKey.wallets,
             );
             break;
           case JobAction.enterWalletPrivateKey:
@@ -75,6 +77,8 @@ export class BotMessagesService {
               ctx,
               message,
               lastJob,
+              CallbackDataKey.wallets,
+              CallbackDataKey.wallets,
             );
             break;
           case JobAction.importDefiWallets:

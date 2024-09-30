@@ -59,54 +59,12 @@ export class BotWalletsService {
     protected readonly service: BotService,
   ) {}
 
-  private async createWallet(data: {
-    telegramUserId: number;
-    chainId: number;
-    name: string;
-    address: string;
-    privateKey: string;
-  }): Promise<Wallet> {
-    const { telegramUserId, chainId, name, address } = data;
-
-    const existingWallet = await this.walletModel
-      .findOne({
-        telegramUserId,
-        chainId,
-        address,
-      })
-      .exec();
-
-    if (!!existingWallet) {
-      const { modifiedCount } = await this.walletModel
-        .updateOne({ _id: existingWallet._id }, { name })
-        .exec();
-
-      if (modifiedCount > 0) return { ...existingWallet, name };
-
-      return existingWallet;
-    }
-
-    const defaultWallet = await this.walletModel
-      .findOne({
-        telegramUserId: data.telegramUserId,
-        isDefault: true,
-      })
-      .exec();
-
-    return await this.walletModel.create(
-      !defaultWallet
-        ? {
-            ...data,
-            isDefault: true,
-          }
-        : data,
-    );
-  }
-
   public async onEnteredWalletPrivateKey(
     @Ctx() ctx: Context,
     @Message() message,
     job: Job,
+    backFrom?: CallbackDataKey,
+    backTo?: CallbackDataKey,
   ): Promise<JobStatus> {
     const { chat } = ctx;
     try {
@@ -116,12 +74,6 @@ export class BotWalletsService {
 
       if (!chain) {
         throw new BadRequestException('The chain is not support.');
-      }
-
-      if (message.from.id != job.telegramUserId) {
-        throw new BadRequestException(
-          'Account telegram is not compare with owner message.',
-        );
       }
 
       if (!message.text || isEmpty(message.text)) {
@@ -150,7 +102,7 @@ export class BotWalletsService {
         throw new InternalServerErrorException('Can not create wallet.');
       }
 
-      await this.onCreatedWallet(ctx, editMessageId, wallet);
+      this.onCreatedWallet(ctx, editMessageId, wallet, backFrom, backTo);
 
       this.service.deleteMessage(ctx, chat.id, deleteMessageId);
 
@@ -172,6 +124,8 @@ export class BotWalletsService {
     @Ctx() ctx: Context,
     editMessageId: number,
     wallet: Wallet,
+    backFrom?: CallbackDataKey,
+    backTo?: CallbackDataKey,
   ) {
     try {
       const { chat } = ctx;
@@ -201,7 +155,7 @@ export class BotWalletsService {
           '<i>IF YOU WILL DELETE THIS MESSAGE, WE WILL NOT SHOW YOUR YOUR PRIVATE KEY AGAIN.</i>',
           '<i>YOU CAN PRESS REFRESH BUTTON TO HIDE PRIVATE KEY.</i>',
         ]),
-        this.buildSelectWalletOptions(ctx, wallet, CallbackDataKey.wallets),
+        this.buildSelectWalletOptions(ctx, wallet, backTo),
       );
     } catch (error) {
       this.service.warningReply(ctx, error?.message);
@@ -215,6 +169,8 @@ export class BotWalletsService {
     chainId: ChainId,
     editMessageId,
     walletName: string,
+    backFrom?: CallbackDataKey,
+    backTo?: CallbackDataKey,
   ) {
     try {
       CommonLogger.instance.debug(`onEnterWalletPrivateKey chainId ${chainId}`);
@@ -250,7 +206,7 @@ export class BotWalletsService {
       );
 
       if (!job) {
-        throw new InternalServerErrorException('Cant not create job.');
+        throw new InternalServerErrorException('Cant not create the job.');
       }
     } catch (error) {
       this.service.warningReply(ctx, error?.message);
@@ -265,6 +221,8 @@ export class BotWalletsService {
     @Ctx() ctx: Context,
     @Message() message,
     job: Job,
+    backFrom?: CallbackDataKey,
+    backTo?: CallbackDataKey,
   ): Promise<JobStatus> {
     const { chat } = ctx;
     try {
@@ -277,14 +235,8 @@ export class BotWalletsService {
         throw new BadRequestException('The chain is not support.');
       }
 
-      if (message.from.id != job.telegramUserId) {
-        throw new BadRequestException(
-          'Account telegram is not compare with owner message.',
-        );
-      }
-
       if (!message.text || isEmpty(message.text)) {
-        throw new BadRequestException('Wallet name is invalid.');
+        throw new BadRequestException('The wallet name is invalid.');
       }
 
       if (isConnect) {
@@ -315,10 +267,10 @@ export class BotWalletsService {
         });
 
         if (!wallet) {
-          throw new InternalServerErrorException('Can not create wallet.');
+          throw new InternalServerErrorException('Can not create the wallet.');
         }
 
-        await this.onCreatedWallet(ctx, editMessageId, wallet);
+        this.onCreatedWallet(ctx, editMessageId, wallet, backFrom, backTo);
       }
 
       this.service.deleteMessage(ctx, chat.id, deleteMessageId);
@@ -339,6 +291,8 @@ export class BotWalletsService {
     @Ctx() ctx,
     chainId: ChainId,
     isConnect: boolean,
+    backFrom?: CallbackDataKey,
+    backTo?: CallbackDataKey,
   ) {
     try {
       CommonLogger.instance.debug(`onEnterWalletName chainId ${chainId}`);
@@ -384,11 +338,11 @@ export class BotWalletsService {
   }
 
   public async onGenerateWallet(@Ctx() ctx: Context, chainId: ChainId) {
-    await this.onEnterWalletName(ctx, chainId, false);
+    this.onEnterWalletName(ctx, chainId, false);
   }
 
   public async onConnectWallet(@Ctx() ctx: Context, chainId: ChainId) {
-    await this.onEnterWalletName(ctx, chainId, true);
+    this.onEnterWalletName(ctx, chainId, true);
   }
 
   private buildGenerateWalletOptionsWith(
@@ -402,14 +356,14 @@ export class BotWalletsService {
         inline_keyboard: [
           [
             {
-              text: 'Connect wallet',
+              text: '🔗 Connect wallet',
               callback_data: new CallbackData<ChainId>(
                 CallbackDataKey.connectWallet,
                 chainId,
               ).toJSON(),
             },
             {
-              text: 'Generate wallet',
+              text: '🤖 Generate wallet',
               callback_data: new CallbackData<ChainId>(
                 CallbackDataKey.generateWallet,
                 chainId,
@@ -429,7 +383,9 @@ export class BotWalletsService {
   ) {
     try {
       const { from } = ctx;
-      const reply = `<b>💰Wallets - Create Wallet</b>`;
+      const reply = this.helperService.buildLinesMessage([
+        `<b>💰Wallets - Create Wallet</b>`,
+      ]);
       const chainId = ChainId.Ethereum;
       await this.helperService.editOrSendMessage(
         ctx,
@@ -464,7 +420,7 @@ export class BotWalletsService {
       }
 
       if (wallet.isDefault) {
-        throw new BadRequestException('The wallet is default.');
+        throw new BadRequestException('The wallet is using.');
       }
 
       const { deletedCount } = await this.walletModel
@@ -478,13 +434,13 @@ export class BotWalletsService {
         throw new InternalServerErrorException('Can not delete the wallet.');
       }
 
-      await this.onWallets(ctx, backFrom);
+      this.onWallets(ctx, backFrom);
 
       this.service.shortReply(ctx, `💚 Deleted successfully.`);
     } catch (error) {
       this.service.warningReply(ctx, error?.message);
 
-      CommonLogger.instance.error(`onRefreshWallet error ${error?.message}`);
+      CommonLogger.instance.error(`onDeleteWallet error ${error?.message}`);
     }
   }
 
@@ -495,7 +451,7 @@ export class BotWalletsService {
     backTo?: CallbackDataKey,
   ) {
     try {
-      await this.onSelectWallet(ctx, walletId, refreshFrom, backTo);
+      this.onSelectWallet(ctx, walletId, refreshFrom, backTo);
 
       this.service.shortReply(ctx, `💚 Refreshed successfully.`);
     } catch (error) {
@@ -505,7 +461,12 @@ export class BotWalletsService {
     }
   }
 
-  public async onSetWalletDefault(@Ctx() ctx: Context, walletId: string) {
+  public async onSetWalletDefault(
+    @Ctx() ctx: Context,
+    walletId: string,
+    backFrom?: CallbackDataKey,
+    backTo?: CallbackDataKey,
+  ) {
     try {
       const wallet = await this.walletModel.findOne({ _id: walletId }).exec();
 
@@ -513,9 +474,11 @@ export class BotWalletsService {
         throw new BadRequestException('Wallet is not found.');
       }
 
-      const done = await this.setDefaultWallet(wallet);
+      const isSetDefault = await this.setDefaultWallet(wallet);
 
-      if (!done) return;
+      if (!isSetDefault) return;
+
+      this.onWallets(ctx, backFrom, backTo);
 
       this.service.shortReply(ctx, '💚 Set default successfully.');
     } catch (error) {
@@ -558,7 +521,6 @@ export class BotWalletsService {
     wallet: Wallet,
     backTo?: CallbackDataKey,
   ) {
-    const { chat, from } = ctx;
     let inline_keyboard = [
       [
         {
@@ -576,14 +538,17 @@ export class BotWalletsService {
           ).toJSON(),
         },
       ],
-      this.helperService.buildBacKAndCloseButtons(backTo),
+      this.helperService.buildBacKAndCloseButtons(
+        backTo,
+        wallet._id.toString(),
+      ),
     ];
 
     if (!wallet.isDefault) {
       inline_keyboard = [
         [
           {
-            text: 'Set as Default Wallet',
+            text: 'Use wallet',
             callback_data: new CallbackData<string>(
               CallbackDataKey.setWalletDefault,
               `${wallet._id.toString()}`,
@@ -670,7 +635,7 @@ export class BotWalletsService {
           }),
           [
             {
-              text: 'Create wallet',
+              text: '➕ Create wallet',
               callback_data: new CallbackData<CallbackDataKey>(
                 CallbackDataKey.createWallet,
                 CallbackDataKey.wallets,
@@ -678,9 +643,9 @@ export class BotWalletsService {
             },
             {
               text: '🔄 Refresh',
-              callback_data: new CallbackData<null>(
+              callback_data: new CallbackData<CallbackDataKey>(
                 CallbackDataKey.refreshWallets,
-                null,
+                CallbackDataKey.wallets,
               ).toJSON(),
             },
           ],
@@ -696,7 +661,7 @@ export class BotWalletsService {
     backTo?: CallbackDataKey,
   ) {
     try {
-      await this.onWallets(ctx, refreshFrom, backTo);
+      this.onWallets(ctx, refreshFrom, backTo);
 
       this.service.shortReply(ctx, `💚 Refreshed successfully.`);
     } catch (error) {
@@ -758,6 +723,50 @@ export class BotWalletsService {
     }
   }
 
+  private async createWallet(data: {
+    telegramUserId: number;
+    chainId: number;
+    name: string;
+    address: string;
+    privateKey: string;
+  }): Promise<Wallet> {
+    const { telegramUserId, chainId, name, address } = data;
+
+    const existingWallet = await this.walletModel
+      .findOne({
+        telegramUserId,
+        chainId,
+        address,
+      })
+      .exec();
+
+    if (!!existingWallet) {
+      const { modifiedCount } = await this.walletModel
+        .updateOne({ _id: existingWallet._id }, { name })
+        .exec();
+
+      if (modifiedCount > 0) return { ...existingWallet, name };
+
+      return existingWallet;
+    }
+
+    const defaultWallet = await this.walletModel
+      .findOne({
+        telegramUserId: data.telegramUserId,
+        isDefault: true,
+      })
+      .exec();
+
+    return await this.walletModel.create(
+      !defaultWallet
+        ? {
+            ...data,
+            isDefault: true,
+          }
+        : data,
+    );
+  }
+
   public async getBalances(wallets: Wallet[]): Promise<Record<string, number>> {
     let balances = Array(wallets.length).map(() => 0);
 
@@ -777,7 +786,7 @@ export class BotWalletsService {
     try {
       const chain: ChainData = chains[wallet.chainId];
 
-      if (!chain) throw new BadRequestException('Chain is not supported.');
+      if (!chain) throw new BadRequestException('The chain is not supported.');
 
       const _ = await chain.rpcProvider.getBalance(wallet.address);
       return parseFloat(
