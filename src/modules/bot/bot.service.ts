@@ -40,7 +40,7 @@ export class BotService {
     extra?: ExtraDocument,
   ) {
     try {
-      return await ctx.sendDocument(document, extra);
+      return await ctx.sendDocument(document, { parse_mode: 'HTML', ...extra });
     } catch (error) {
       // CommonLogger.instance.error(
       //   `sendDocument error ${this._extractErrorMessage(error)}`,

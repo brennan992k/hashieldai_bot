@@ -17,23 +17,27 @@ import {
   Credential,
   CredentialParams,
   HashieldAIRepository,
-  Wallet,
 } from 'src/repositories/hashield-ai.repository';
-import { ChainId, Web3Address } from 'src/app.type';
+import { Web3Address } from 'src/app.type';
 import { CommonCache } from 'src/common/cache';
-import { ethers } from 'ethers';
-import { chains } from 'src/data/chains';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Job } from './schemas/job.schema';
-import { isEmpty } from 'class-validator';
 import { XLSXUtils } from 'src/common/utils/xlsx';
-import { validator } from 'src/common/utils/validator';
 import { getWebsiteInfo } from 'src/common/utils/website';
+import { isEmpty } from 'class-validator';
+import { validator } from 'src/common/utils/validator';
 
 type ImportCredentialsJobParams = {
   deleteMessageId: number;
   editMessageId: number;
+};
+
+type UpdateCredentialJobParams = {
+  deleteMessageId: number;
+  editMessageId: number;
+  credentialId: string;
+  type: CallbackDataKey;
 };
 
 @Injectable()
@@ -139,173 +143,262 @@ export class BotWeb2LoginsService {
     }
   }
 
-  // public async onEnteredCredentialOrganization(
-  //   @Ctx() ctx: Context,
-  //   @Message() message,
-  //   job: Job,
-  //   backFrom?: CallbackDataKey,
-  //   backTo?: CallbackDataKey,
-  // ): Promise<JobStatus> {
-  //   const { chat } = ctx;
-  //   try {
-  //     const { deleteMessageId, editMessageId, credentialId } = JSON.parse(
-  //       job.params,
-  //     ) as EnterCredentialOrganizationJobParams;
+  public async onEnteredToUpdateCredential(
+    @Ctx() ctx: Context,
+    @Message() message,
+    job: Job,
+    backFrom?: CallbackDataKey,
+    backTo?: CallbackDataKey,
+  ): Promise<JobStatus> {
+    const { chat } = ctx;
+    try {
+      const { deleteMessageId, editMessageId, credentialId, type } = JSON.parse(
+        job.params,
+      ) as UpdateCredentialJobParams;
 
-  //     const credential = await this.getCredential(ctx, credentialId);
+      const credential = await this.getCredential(ctx, credentialId);
 
-  //     if (!credential) {
-  //       throw new BadRequestException('The credential is not found.');
-  //     }
+      if (!credential) {
+        throw new BadRequestException('The credential is not found.');
+      }
 
-  //     if (message.from.id != job.telegramUserId) {
-  //       throw new BadRequestException(
-  //         'Account telegram is not compare with owner message.',
-  //       );
-  //     }
+      let error: string;
+      let body: CredentialParams = {};
+      switch (type) {
+        case CallbackDataKey.updateCredentialWebsites:
+          const websites = message.text.split(',');
+          const isInValid = websites.some(
+            (website) =>
+              !validator.isURL(website) && !validator.isDomain(website),
+          );
+          if (isInValid) {
+            error = 'Websites are invalid.';
+          } else {
+            body = {
+              url: websites,
+            };
+          }
+          break;
+        case CallbackDataKey.updateCredentialUsername:
+          if (!validator.isUsername(message.text)) {
+            error = 'Username is invalid.';
+          } else {
+            body = {
+              username: message.text,
+            };
+          }
+        case CallbackDataKey.updateCredentialEmail:
+          if (!validator.isEmail(message.text)) {
+            error = 'Email is invalid.';
+          } else {
+            body = {
+              email: message.text,
+            };
+          }
+        case CallbackDataKey.updateCredentialPassword:
+          if (isEmpty(message.text)) {
+            error = 'Password is invalid.';
+          } else {
+            body = {
+              password: message.text,
+            };
+          }
+        default:
+          break;
+      }
 
-  //     if (!message.text || isEmpty(message.text)) {
-  //       throw new BadRequestException('The organization is invalid.');
-  //     }
+      if (error) {
+        throw new BadRequestException(error);
+      }
 
-  //     const isUpdated = await this.updateCredential(ctx, credentialId, {
-  //       ...credential,
-  //       wallets: credential.wallets.map(({ wallet_name, private_key }) => ({
-  //         wallet_name,
-  //         private_key: HashieldAIRepository.instance.decryptData(private_key),
-  //       })),
-  //       organization: message.text,
-  //     });
+      const isUpdated = await this.updateCredential(ctx, credentialId, body);
 
-  //     if (!isUpdated) {
-  //       throw new InternalServerErrorException(
-  //         'Can not update the credential.',
-  //       );
-  //     }
+      if (!isUpdated) {
+        throw new InternalServerErrorException(
+          'Can not update the credential.',
+        );
+      }
 
-  //     const reply = this.helperService.buildLinesMessage([
-  //       `<b>👝 Web2 Logins - ${credential.organization}</b>`,
-  //     ]);
+      const info = getWebsiteInfo({ ...credential, ...body }.url[0]);
+      const reply = this.helperService.buildLinesMessage([
+        `<b>👝 Web2 Logins - ${info.name}</b>`,
+      ]);
 
-  //     await this.service.editMessage(
-  //       ctx,
-  //       chat.id,
-  //       editMessageId,
-  //       reply,
-  //       this.buildSelectCredentialOptions(ctx, credential, backTo),
-  //     );
+      await this.service.editMessage(
+        ctx,
+        chat.id,
+        editMessageId,
+        reply,
+        this.buildSelectCredentialOptions(ctx, credential, backTo),
+      );
 
-  //     this.service.deleteMessage(ctx, chat.id, deleteMessageId);
+      this.service.deleteMessage(ctx, chat.id, deleteMessageId);
 
-  //     return JobStatus.done;
-  //   } catch (error) {
-  //     this.service.warningReply(ctx, error?.message);
+      return JobStatus.done;
+    } catch (error) {
+      this.service.warningReply(ctx, error?.message);
 
-  //     CommonLogger.instance.error(
-  //       `onEnteredCredentialOrganization error ${error.message}`,
-  //     );
+      CommonLogger.instance.error(
+        `onEnteredToUpdateCredential error ${error.message}`,
+      );
 
-  //     return JobStatus.inProcess;
-  //   } finally {
-  //     this.service.deleteMessage(ctx, chat.id, message.message_id);
-  //   }
-  // }
+      return JobStatus.inProcess;
+    } finally {
+      this.service.deleteMessage(ctx, chat.id, message.message_id);
+    }
+  }
 
-  // public async onEnterCredentialOrganization(
-  //   @Ctx() ctx,
-  //   credentialId: string,
-  //   backFrom?: CallbackDataKey,
-  //   backTo?: CallbackDataKey,
-  // ) {
-  //   try {
-  //     const { from, update } = ctx;
-  //     const { message: editMessage } = update.callback_query;
+  public async onUpdateCredential(
+    @Ctx() ctx,
+    credentialId: string,
+    type: CallbackDataKey,
+    backFrom?: CallbackDataKey,
+    backTo?: CallbackDataKey,
+  ) {
+    try {
+      const { from, update } = ctx;
+      const { message: editMessage } = update.callback_query;
 
-  //     const deleteMessage = await this.service.reply(
-  //       ctx,
-  //       `Reply to this message with your desired organization`,
-  //       {
-  //         reply_markup: {
-  //           force_reply: true,
-  //         },
-  //       },
-  //     );
+      const credential = await this.getCredential(ctx, credentialId);
 
-  //     const params: EnterCredentialOrganizationJobParams = {
-  //       deleteMessageId: deleteMessage.message_id,
-  //       editMessageId: editMessage.message_id,
-  //       credentialId,
-  //     };
+      if (!credential) {
+        throw new BadRequestException('Credential is not found.');
+      }
 
-  //     const job = await this.jobModel.create({
-  //       telegramUserId: from.id,
-  //       action: JobAction.enterCredentialOrganization,
-  //       status: JobStatus.inProcess,
-  //       params: JSON.stringify(params),
-  //       timestamp: new Date().getTime(),
-  //     });
+      switch (type) {
+        case CallbackDataKey.updateCredentialAutoLogin:
+        case CallbackDataKey.updateCredentialAutoFill:
+        case CallbackDataKey.updateCredentialProtectItem:
+          let body = {};
+          switch (type) {
+            case CallbackDataKey.updateCredentialAutoLogin:
+              body = { ...body, autoLogin: !credential.autoLogin };
+              break;
+            case CallbackDataKey.updateCredentialAutoFill:
+              body = { ...body, autoFill: !credential.autoFill };
+              break;
+            case CallbackDataKey.updateCredentialProtectItem:
+              body = { ...body, isProtect: !credential.isProtect };
+              break;
+            default:
+              break;
+          }
+          const isUpdated = await this.updateCredential(
+            ctx,
+            credentialId,
+            body,
+          );
 
-  //     CommonLogger.instance.debug(
-  //       `onEnterCredentialOrganization ${JSON.stringify(job)}`,
-  //     );
+          if (!isUpdated) {
+            throw new InternalServerErrorException(
+              'Can not update the credential.',
+            );
+          }
 
-  //     if (!job) {
-  //       throw new InternalServerErrorException('Cant not create job.');
-  //     }
-  //   } catch (error) {
-  //     this.service.warningReply(ctx, error?.message);
+          this.onSelectCredential(ctx, credentialId, backFrom, backTo);
+          break;
 
-  //     CommonLogger.instance.error(
-  //       `onEnterCredentialOrganization error ${error?.message}`,
-  //     );
-  //   }
-  // }
+        default:
+          const reply = (() => {
+            switch (type) {
+              case CallbackDataKey.updateCredentialWebsites:
+                return 'Reply to this message with your desired new websites, separated by "&"';
+              case CallbackDataKey.updateCredentialUsername:
+                return 'Reply to this message with your desired new username';
+              case CallbackDataKey.updateCredentialEmail:
+                return 'Reply to this message with your desired new email';
+              case CallbackDataKey.updateCredentialPassword:
+                return 'Reply to this message with your desired new password';
+              default:
+                break;
+            }
+          })();
+
+          const deleteMessage = await this.service.reply(ctx, reply, {
+            reply_markup: {
+              force_reply: true,
+            },
+          });
+
+          const params: UpdateCredentialJobParams = {
+            deleteMessageId: deleteMessage.message_id,
+            editMessageId: editMessage.message_id,
+            credentialId,
+            type,
+          };
+
+          const job = await this.jobModel.create({
+            telegramUserId: from.id,
+            action: JobAction.updateCredential,
+            status: JobStatus.inProcess,
+            params: JSON.stringify(params),
+            timestamp: new Date().getTime(),
+          });
+
+          CommonLogger.instance.debug(
+            `onEnterCredentialOrganization ${JSON.stringify(job)}`,
+          );
+
+          if (!job) {
+            throw new InternalServerErrorException('Cant not create job.');
+          }
+          break;
+      }
+    } catch (error) {
+      this.service.warningReply(ctx, error?.message);
+
+      CommonLogger.instance.error(
+        `onEnterCredentialOrganization error ${error?.message}`,
+      );
+    }
+  }
 
   private buildSelectCredentialOptions(
     @Ctx() ctx: Context,
     credential: Credential,
     backTo?: CallbackDataKey,
   ) {
+    const info = getWebsiteInfo(credential.url[0]);
     return {
       parse_mode: 'HTML',
       reply_markup: {
         inline_keyboard: [
-          // [
-          //   {
-          //     text: 'Websites',
-          //     callback_data: new CallbackData<string>(
-          //       CallbackDataKey.editCredentialWebsites,
-          //       `${credential._id.toString()}`,
-          //     ).toJSON(),
-          //   },
-          // ],
           [
             {
-              text: `Username: ${
+              text: `✏️ Websites: ${info.url}`,
+              callback_data: new CallbackData<string>(
+                CallbackDataKey.updateCredentialWebsites,
+                `${credential._id.toString()}`,
+              ).toJSON(),
+            },
+          ],
+          [
+            {
+              text: `✏️ Username: ${
                 credential.username ? credential.username : '--'
               }`,
               callback_data: new CallbackData<string>(
-                CallbackDataKey.editCredentialUsername,
+                CallbackDataKey.updateCredentialUsername,
                 `${credential._id.toString()}`,
               ).toJSON(),
             },
           ],
           [
             {
-              text: `Email: ${credential.email ? credential.email : '--'}`,
+              text: `✏️ Email: ${credential.email ? credential.email : '--'}`,
               callback_data: new CallbackData<string>(
-                CallbackDataKey.editCredentialUsername,
+                CallbackDataKey.updateCredentialUsername,
                 `${credential._id.toString()}`,
               ).toJSON(),
             },
           ],
           [
             {
-              text: `Password: ${HashieldAIRepository.instance.decryptData(
-                credential.password,
-              )}`,
+              text: `✏️ Password: ${
+                credential.password ? credential.password : '--'
+              }`,
               callback_data: new CallbackData<string>(
-                CallbackDataKey.editCredentialPassword,
+                CallbackDataKey.updateCredentialPassword,
                 `${credential._id.toString()}`,
               ).toJSON(),
             },
@@ -314,7 +407,7 @@ export class BotWeb2LoginsService {
             {
               text: `${credential.autoLogin ? '🟢' : '🔴'} Auto Login`,
               callback_data: new CallbackData<string>(
-                CallbackDataKey.editCredentialAutoLogin,
+                CallbackDataKey.updateCredentialAutoLogin,
                 `${credential._id.toString()}`,
               ).toJSON(),
             },
@@ -323,7 +416,7 @@ export class BotWeb2LoginsService {
             {
               text: `${credential.autoFill ? '🟢' : '🔴'} Auto Fill`,
               callback_data: new CallbackData<string>(
-                CallbackDataKey.editCredentialAutoFill,
+                CallbackDataKey.updateCredentialAutoFill,
                 `${credential._id.toString()}`,
               ).toJSON(),
             },
@@ -332,7 +425,7 @@ export class BotWeb2LoginsService {
             {
               text: `${credential.isProtect ? '🟢' : '🔴'} Protect Item`,
               callback_data: new CallbackData<string>(
-                CallbackDataKey.editCredentialProtectItem,
+                CallbackDataKey.updateCredentialProtectItem,
                 `${credential._id.toString()}`,
               ).toJSON(),
             },
@@ -553,9 +646,24 @@ export class BotWeb2LoginsService {
         this._templateData,
       );
 
-      await this.service.sendDocument(ctx, {
-        source: documentPath,
-      });
+      const caption = this.helperService.buildLinesMessage([
+        `<b>Instruction for Completing the Form:</b>\n`,
+        `<b>1.Websites:</b> You can enter one or more websites in the provided column. If there are multiple websites, separate them with a comma (e.g., example.com, example1.ca).\n`,
+        `<b>2.Auto Login, AutoFill, Protect Items:</b> These columns are used to indicate if specific features are enabled or disabled for each entry.\n`,
+        `Use 0 to represent No (the feature is not enabled).`,
+        `Use 1 to represent Yes (the feature is enabled).\n`,
+        `<b>Please ensure all required fields are filled out accurately to facilitate seamless usage of your saved credentials.</b>`,
+      ]);
+
+      await this.service.sendDocument(
+        ctx,
+        {
+          source: documentPath,
+        },
+        {
+          caption,
+        },
+      );
     } catch (error) {
       this.service.warningReply(ctx, error?.message);
 
@@ -646,7 +754,7 @@ export class BotWeb2LoginsService {
 
   private async getCredentials(
     @Ctx() ctx: Context,
-    sync = false,
+    sync = true,
   ): Promise<Array<Credential>> {
     const wallet = await this.walletsService.getDefaultWallet(ctx);
 
@@ -684,20 +792,6 @@ export class BotWeb2LoginsService {
         'Please connect/generate wallet to continue.',
       );
     }
-
-    // if (
-    //   params.some(({ organization, wallets }) => {
-    //     return (
-    //       !organization ||
-    //       wallets.some(
-    //         ({ wallet_name, private_key }) =>
-    //           !wallet_name || !validator.isWalletPrivateKey(private_key),
-    //       )
-    //     );
-    //   })
-    // ) {
-    //   throw new BadRequestException('Defi wallets data is invalid.');
-    // }
 
     const isCreated = await HashieldAIRepository.instance.createCredentials(
       wallet.address,
@@ -754,17 +848,6 @@ export class BotWeb2LoginsService {
         'Please connect/generate wallet to continue.',
       );
     }
-
-    // if (
-    //   (params.organization != undefined && !params.organization) ||
-    //   (params.wallets != undefined &&
-    //     params.wallets.some(
-    //       ({ wallet_name, private_key }) =>
-    //         !wallet_name || !validator.isWalletPrivateKey(private_key),
-    //     ))
-    // ) {
-    //   throw new BadRequestException('Defi wallet data is invalid.');
-    // }
 
     const isUpdated = await HashieldAIRepository.instance.updateCredential(
       wallet.address,

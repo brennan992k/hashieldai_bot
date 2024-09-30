@@ -30,17 +30,12 @@ import { isEmpty } from 'class-validator';
 import { XLSXUtils } from 'src/common/utils/xlsx';
 import { validator } from 'src/common/utils/validator';
 
-type EnterWalletOfDefiWalletNameJobParams = {
+type UpdateDefiWalletJobParams = {
   deleteMessageId: number;
   editMessageId: number;
   defiWalletId: string;
-  walletIndex: number;
-};
-
-type EnterDefiWalletOrganizationJobParams = {
-  deleteMessageId: number;
-  editMessageId: number;
-  defiWalletId: string;
+  type: CallbackDataKey;
+  walletIndex?: number;
 };
 
 type ImportDefiWalletsJobParams = {
@@ -106,19 +101,12 @@ export class BotDefiWalletsService {
 
       const isDeleted = await this.updateDefiWallet(ctx, defiWalletId, {
         ...defiWallet,
-        wallets: defiWallet.wallets.reduce(
-          (list, { wallet_name, private_key }, index) => {
-            if (index != walletIndex) {
-              list.push({
-                wallet_name,
-                private_key:
-                  HashieldAIRepository.instance.decryptData(private_key),
-              });
-            }
-            return list;
-          },
-          [],
-        ),
+        wallets: defiWallet.wallets.reduce((list, item, index) => {
+          if (index != walletIndex) {
+            list.push(item);
+          }
+          return list;
+        }, []),
       });
 
       if (!isDeleted) {
@@ -163,136 +151,6 @@ export class BotDefiWalletsService {
     }
   }
 
-  public async onEnteredWalletOfDefiWalletName(
-    @Ctx() ctx: Context,
-    @Message() message,
-    job: Job,
-    backFrom?: CallbackDataKey,
-    backTo?: CallbackDataKey,
-  ): Promise<JobStatus> {
-    const { chat } = ctx;
-    try {
-      const { deleteMessageId, editMessageId, defiWalletId, walletIndex } =
-        JSON.parse(job.params) as EnterWalletOfDefiWalletNameJobParams;
-
-      const defiWallet = await this.getDefiWallet(ctx, defiWalletId);
-      if (!defiWallet) {
-        throw new BadRequestException('The defi wallet is not found.');
-      }
-
-      if (message.from.id != job.telegramUserId) {
-        throw new BadRequestException(
-          'Account telegram is not compare with owner message.',
-        );
-      }
-
-      if (!message.text || isEmpty(message.text)) {
-        throw new BadRequestException('The wallet name is invalid.');
-      }
-
-      const isUpdated = await this.updateDefiWallet(ctx, defiWalletId, {
-        ...defiWallet,
-        wallets: defiWallet.wallets.map((wallet, index) => ({
-          private_key: HashieldAIRepository.instance.decryptData(
-            wallet.private_key,
-          ),
-          wallet_name: index == walletIndex ? message.text : wallet.wallet_name,
-        })),
-      });
-
-      if (!isUpdated) {
-        throw new InternalServerErrorException('Can not update the wallet.');
-      }
-
-      const wallet = defiWallet.wallets[walletIndex];
-
-      if (!wallet) {
-        throw new BadRequestException('The wallet is not found.');
-      }
-
-      const reply = this.buildSelectWalletOfDefiWalletMessage(wallet);
-
-      await this.service.editMessage(
-        ctx,
-        chat.id,
-        editMessageId,
-        reply,
-        this.buildSelectWalletOfDefiWalletOptions(
-          ctx,
-          defiWallet,
-          walletIndex,
-          backTo,
-        ),
-      );
-
-      this.service.deleteMessage(ctx, chat.id, deleteMessageId);
-
-      return JobStatus.done;
-    } catch (error) {
-      this.service.warningReply(ctx, error?.message);
-
-      CommonLogger.instance.error(
-        `onEnteredWalletOfDefiWalletName error ${error.message}`,
-      );
-
-      return JobStatus.inProcess;
-    } finally {
-      this.service.deleteMessage(ctx, chat.id, message.message_id);
-    }
-  }
-
-  public async onEnterWalletOfDefiWalletName(
-    @Ctx() ctx,
-    defiWalletId: string,
-    walletIndex: number,
-    backFrom?: CallbackDataKey,
-    backTo?: CallbackDataKey,
-  ) {
-    try {
-      const { from, update } = ctx;
-      const { message: editMessage } = update.callback_query;
-
-      const deleteMessage = await this.service.reply(
-        ctx,
-        `Reply to this message with your desired organization`,
-        {
-          reply_markup: {
-            force_reply: true,
-          },
-        },
-      );
-
-      const params: EnterWalletOfDefiWalletNameJobParams = {
-        deleteMessageId: deleteMessage.message_id,
-        editMessageId: editMessage.message_id,
-        defiWalletId,
-        walletIndex,
-      };
-
-      const job = await this.jobModel.create({
-        telegramUserId: from.id,
-        action: JobAction.enterWalletOfDefiWalletName,
-        status: JobStatus.inProcess,
-        params: JSON.stringify(params),
-        timestamp: new Date().getTime(),
-      });
-
-      CommonLogger.instance.debug(
-        `onEnterWalletOfDefiWalletName ${JSON.stringify(job)}`,
-      );
-
-      if (!job) {
-        throw new InternalServerErrorException('Cant not create job.');
-      }
-    } catch (error) {
-      this.service.warningReply(ctx, error?.message);
-
-      CommonLogger.instance.error(
-        `onEnterWalletOfDefiWalletName error ${error?.message}`,
-      );
-    }
-  }
-
   private buildSelectWalletOfDefiWalletOptions(
     @Ctx() ctx: Context,
     defiWallet: DefiWallet,
@@ -307,7 +165,7 @@ export class BotDefiWalletsService {
             {
               text: '✏️ Name',
               callback_data: new CallbackData<string>(
-                CallbackDataKey.editWalletOfDefiWallet,
+                CallbackDataKey.updateWalletNameOfDefiWallet,
                 `${defiWallet._id}_${walletIndex}`,
               ).toJSON(),
             },
@@ -335,12 +193,8 @@ export class BotDefiWalletsService {
   }
 
   private buildSelectWalletOfDefiWalletMessage(wallet: Wallet) {
-    const privateKey = HashieldAIRepository.instance.decryptData(
-      wallet.private_key,
-    );
-
     const chain = chains[ChainId.Ethereum];
-    const web3Wallet = new ethers.Wallet(privateKey);
+    const web3Wallet = new ethers.Wallet(wallet.private_key);
     const reply = this.helperService.buildLinesMessage([
       `<b>💰Wallets - ${wallet.wallet_name}</b>`,
       `<b>Address:</b> <code>${web3Wallet.address}</code>`,
@@ -443,7 +297,7 @@ export class BotDefiWalletsService {
     }
   }
 
-  public async onEnteredDefiWalletOrganization(
+  public async onEnteredUpdateDefiWallet(
     @Ctx() ctx: Context,
     @Message() message,
     job: Job,
@@ -452,9 +306,13 @@ export class BotDefiWalletsService {
   ): Promise<JobStatus> {
     const { chat } = ctx;
     try {
-      const { deleteMessageId, editMessageId, defiWalletId } = JSON.parse(
-        job.params,
-      ) as EnterDefiWalletOrganizationJobParams;
+      const {
+        deleteMessageId,
+        editMessageId,
+        defiWalletId,
+        type,
+        walletIndex,
+      } = JSON.parse(job.params) as UpdateDefiWalletJobParams;
 
       const defiWallet = await this.getDefiWallet(ctx, defiWalletId);
 
@@ -462,24 +320,41 @@ export class BotDefiWalletsService {
         throw new BadRequestException('The defi wallet is not found.');
       }
 
-      if (message.from.id != job.telegramUserId) {
-        throw new BadRequestException(
-          'Account telegram is not compare with owner message.',
-        );
+      let error: string;
+      let body: DefiWalletParams = {};
+      switch (type) {
+        case CallbackDataKey.updateDefiWalletOrganization:
+          if (isEmpty(message.text)) {
+            error = 'The organization are invalid.';
+          } else {
+            body = {
+              organization: message.text,
+            };
+          }
+          break;
+        case CallbackDataKey.updateCredentialUsername:
+          if (isEmpty(message.text)) {
+            error = 'The wallet name is invalid.';
+          } else {
+            body = {
+              wallets: defiWallet.wallets.map(
+                ({ wallet_name, ...rest }, index) => ({
+                  ...rest,
+                  wallet_name:
+                    index == walletIndex ? message.text : wallet_name,
+                }),
+              ),
+            };
+          }
+        default:
+          break;
       }
 
-      if (!message.text || isEmpty(message.text)) {
-        throw new BadRequestException('The organization is invalid.');
+      if (error) {
+        throw new BadRequestException(error);
       }
 
-      const isUpdated = await this.updateDefiWallet(ctx, defiWalletId, {
-        ...defiWallet,
-        wallets: defiWallet.wallets.map(({ wallet_name, private_key }) => ({
-          wallet_name,
-          private_key: HashieldAIRepository.instance.decryptData(private_key),
-        })),
-        organization: message.text,
-      });
+      const isUpdated = await this.updateDefiWallet(ctx, defiWalletId, body);
 
       if (!isUpdated) {
         throw new InternalServerErrorException(
@@ -487,8 +362,9 @@ export class BotDefiWalletsService {
         );
       }
 
+      const newDefiWallet = { ...defiWallet, ...body };
       const reply = this.helperService.buildLinesMessage([
-        `<b>👝 Defi Wallets - ${defiWallet.organization}</b>`,
+        `<b>👝 Defi Wallets - ${newDefiWallet.organization}</b>`,
       ]);
 
       await this.service.editMessage(
@@ -496,7 +372,11 @@ export class BotDefiWalletsService {
         chat.id,
         editMessageId,
         reply,
-        this.buildSelectDefiWalletOptions(ctx, defiWallet, backTo),
+        this.buildSelectDefiWalletOptions(
+          ctx,
+          newDefiWallet as DefiWallet,
+          backTo,
+        ),
       );
 
       this.service.deleteMessage(ctx, chat.id, deleteMessageId);
@@ -515,9 +395,11 @@ export class BotDefiWalletsService {
     }
   }
 
-  public async onEnterDefiWalletOrganization(
+  public async onUpdateDefiWallet(
     @Ctx() ctx,
     defiWalletId: string,
+    type: CallbackDataKey,
+    walletIndex?: number,
     backFrom?: CallbackDataKey,
     backTo?: CallbackDataKey,
   ) {
@@ -525,43 +407,60 @@ export class BotDefiWalletsService {
       const { from, update } = ctx;
       const { message: editMessage } = update.callback_query;
 
-      const deleteMessage = await this.service.reply(
-        ctx,
-        `Reply to this message with your desired organization`,
-        {
-          reply_markup: {
-            force_reply: true,
-          },
-        },
-      );
+      const defiWallet = await this.getDefiWallet(ctx, defiWalletId);
 
-      const params: EnterDefiWalletOrganizationJobParams = {
-        deleteMessageId: deleteMessage.message_id,
-        editMessageId: editMessage.message_id,
-        defiWalletId,
-      };
+      if (!defiWallet) {
+        throw new BadRequestException('Defi wallet is not found.');
+      }
 
-      const job = await this.jobModel.create({
-        telegramUserId: from.id,
-        action: JobAction.enterDefiWalletOrganization,
-        status: JobStatus.inProcess,
-        params: JSON.stringify(params),
-        timestamp: new Date().getTime(),
-      });
+      switch (type) {
+        default:
+          const reply = (() => {
+            switch (type) {
+              case CallbackDataKey.updateDefiWalletOrganization:
+                return `Reply to this message with your desired organization`;
+              case CallbackDataKey.updateWalletNameOfDefiWallet:
+                return `Reply to this message with your desired organization`;
+              default:
+                break;
+            }
+          })();
 
-      CommonLogger.instance.debug(
-        `onEnterDefiWalletOrganization ${JSON.stringify(job)}`,
-      );
+          const deleteMessage = await this.service.reply(ctx, reply, {
+            reply_markup: {
+              force_reply: true,
+            },
+          });
 
-      if (!job) {
-        throw new InternalServerErrorException('Cant not create job.');
+          const params: UpdateDefiWalletJobParams = {
+            deleteMessageId: deleteMessage.message_id,
+            editMessageId: editMessage.message_id,
+            defiWalletId,
+            walletIndex,
+            type,
+          };
+
+          const job = await this.jobModel.create({
+            telegramUserId: from.id,
+            action: JobAction.updateDefiWallet,
+            status: JobStatus.inProcess,
+            params: JSON.stringify(params),
+            timestamp: new Date().getTime(),
+          });
+
+          CommonLogger.instance.debug(
+            `onUpdateDefiWallet ${JSON.stringify(job)}`,
+          );
+
+          if (!job) {
+            throw new InternalServerErrorException('Cant not create job.');
+          }
+          break;
       }
     } catch (error) {
       this.service.warningReply(ctx, error?.message);
 
-      CommonLogger.instance.error(
-        `onEnterDefiWalletOrganization error ${error?.message}`,
-      );
+      CommonLogger.instance.error(`onUpdateDefiWallet error ${error?.message}`);
     }
   }
 
@@ -589,7 +488,7 @@ export class BotDefiWalletsService {
             {
               text: '✏️ Organization',
               callback_data: new CallbackData<string>(
-                CallbackDataKey.editDefiWalletOrganization,
+                CallbackDataKey.updateDefiWalletOrganization,
                 `${defiWallet._id.toString()}`,
               ).toJSON(),
             },
@@ -809,9 +708,21 @@ export class BotDefiWalletsService {
         this._templateData,
       );
 
-      await this.service.sendDocument(ctx, {
-        source: documentPath,
-      });
+      const caption = this.helperService.buildLinesMessage([
+        `<b>Instruction for Completing the Wallet Form:</b>\n`,
+        `- You can fill out as many wallets as you want by adding more "Wallet" columns. Each column represents a separate wallet.\n`,
+        `- Format for Wallet Columns:\n`,
+        `Each wallet column should contain the wallet details in the format: <i>Wallet Name, Private Key</i>.\n`,
+        `Ensure each piece of information is separated by a comma, and that the details are complete to avoid issues in accessing the wallets.`,
+      ]);
+
+      await this.service.sendDocument(
+        ctx,
+        {
+          source: documentPath,
+        },
+        { caption },
+      );
     } catch (error) {
       this.service.warningReply(ctx, error?.message);
 
@@ -903,7 +814,7 @@ export class BotDefiWalletsService {
 
   private async getDefiWallets(
     @Ctx() ctx: Context,
-    sync = false,
+    sync = true,
   ): Promise<Array<DefiWallet>> {
     const wallet = await this.walletsService.getDefaultWallet(ctx);
 

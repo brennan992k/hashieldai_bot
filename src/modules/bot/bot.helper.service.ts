@@ -55,7 +55,10 @@ export class BotHelperService {
     return html.replace(/<[^>]*>/g, '').trim();
   }
 
-  public buildBacKAndCloseButtons(backTo?: CallbackDataKey, params?: string) {
+  public buildBacKAndCloseButtons(
+    backTo?: CallbackDataKey,
+    params?: string | number,
+  ) {
     let buttons = [
       {
         text: '❌ Close',

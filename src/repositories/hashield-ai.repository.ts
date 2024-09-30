@@ -2,6 +2,12 @@ import { Web3Address } from 'src/app.type';
 import { BaseRepository } from './base.repository';
 import * as CryptoJS from 'crypto-js';
 
+export enum Gender {
+  male = 'male',
+  female = 'female',
+  others = 'others',
+}
+
 export type PasswordHealth = {
   id: string;
   name: string;
@@ -15,18 +21,21 @@ export type WalletHealth = {
 
 export type Credential = {
   _id: string;
-  wallet: Web3Address;
+  owner: Web3Address;
   url: Array<string>;
   autoLogin: boolean;
   autoFill: boolean;
   isProtect: boolean;
-  type: 'owner';
+  type: 'owner' | 'transfer';
   email: string;
   username: string;
   password: string;
   note: string;
+  is_deleted: boolean;
   createdAt: string;
   updatedAt: string;
+  limit_rights: Array<any>;
+  full_rights: Array<any>;
   __v: number;
 };
 
@@ -48,21 +57,23 @@ export type Wallet = {
 
 export type DefiWallet = {
   _id: string;
+  owner: Web3Address;
   organization: string;
   seed_phrase: string;
-  wallet: Web3Address;
   wallets: Array<Wallet>;
   is_deleted: boolean;
   autoLogin: boolean;
   autoFill: boolean;
   isProtect: boolean;
-  type: 'owner';
+  type: 'owner' | 'transfer';
   createdAt: string;
   updatedAt: string;
+  limit_rights: Array<any>;
+  full_rights: Array<any>;
   __v: number;
 };
 
-export type WalletParams = { wallet_name: string; private_key: string };
+export type WalletParams = { wallet_name?: string; private_key?: string };
 
 export type DefiWalletParams = {
   organization?: string;
@@ -70,52 +81,51 @@ export type DefiWalletParams = {
   wallets?: Array<WalletParams>;
 };
 
+export type Card = {
+  card_number: string;
+  cvc: string;
+  expire_date: string;
+};
+
 export type Profile = {
   _id: string;
   owner: Web3Address;
-  first_name: string;
-  last_name: string;
-  gender: string;
-  birthday: string;
-  city: string;
-  post_code: string;
-  phone: string;
-  state: string;
+  cards: Array<Card>;
+  profile: {
+    first_name: string;
+    last_name: string;
+    gender: Gender;
+    birthday: string;
+    city: string;
+    state: string;
+    post_code: string;
+    phone: string;
+  };
   is_deleted: boolean;
-  createdAt: string;
-  updatedAt: string;
-  __v: number;
-};
-
-export type ProfileParams = {
-  first_name?: string;
-  last_name?: string;
-  gender?: string;
-  birthday?: string;
-  city?: string;
-  post_code?: string;
-  phone?: string;
-  state?: string;
-};
-
-export type Card = {
-  owner: Web3Address;
-  card_number: string;
-  expire_date: string;
-  cvc: string;
-  is_deleted: boolean;
-  _id: string;
   createdAt: string;
   updatedAt: string;
   __v: number;
 };
 
 export type CardParams = {
-  card_number: string;
-  expire_date: string;
-  cvc: string;
+  card_number?: string;
+  expire_date?: string;
+  cvc?: string;
 };
 
+export type ProfileParams = {
+  profile?: {
+    first_name?: string;
+    last_name?: string;
+    gender?: Gender;
+    birthday?: string;
+    city?: string;
+    post_code?: string;
+    phone?: string;
+    state?: string;
+  };
+  cards?: Array<CardParams>;
+};
 export class HashieldAIRepository extends BaseRepository {
   private static _instance: HashieldAIRepository;
   private _secret: string;
@@ -159,7 +169,10 @@ export class HashieldAIRepository extends BaseRepository {
       throw new Error('Can not get credentials.');
     }
 
-    return response;
+    return response.map(({ password, ...rest }) => ({
+      ...rest,
+      password: HashieldAIRepository.instance.decryptData(password),
+    }));
   }
 
   async createCredentials(
@@ -226,7 +239,7 @@ export class HashieldAIRepository extends BaseRepository {
   }
 
   public async getDefiWallets(owner: Web3Address): Promise<Array<DefiWallet>> {
-    const response = await this.get('defi', {
+    const response: Array<DefiWallet> = await this.get('defi', {
       headers: {
         api_key: this.encryptData(owner),
       },
@@ -236,7 +249,13 @@ export class HashieldAIRepository extends BaseRepository {
       throw new Error('Can not update defi wallets');
     }
 
-    return response;
+    return response.map(({ wallets, ...rest }) => ({
+      ...rest,
+      wallets: wallets.map(({ private_key, ...rest }) => ({
+        ...rest,
+        private_key: HashieldAIRepository.instance.decryptData(private_key),
+      })),
+    }));
   }
 
   public async createDefiWallet(
@@ -361,85 +380,34 @@ export class HashieldAIRepository extends BaseRepository {
     return response;
   }
 
-  public async createCards(
-    owner: Web3Address,
-    params: Array<CardParams>,
-  ): Promise<boolean> {
-    const response = await this.post('autofill/card', params, {
+  public async getProfile(owner: Web3Address): Promise<Profile> {
+    const response: Profile = await this.get('autofill', {
       headers: {
         api_key: this.encryptData(owner),
       },
     });
 
     if (!response) {
-      throw new Error('Can not create cards.');
+      throw new Error('Can not get profile.');
     }
 
-    return true;
-  }
-
-  public async deleteCards(
-    owner: Web3Address,
-    cardIds: Array<string>,
-  ): Promise<boolean> {
-    const response = await this.delete('autofill/card', {
-      data: cardIds,
-      headers: {
-        api_key: this.encryptData(owner),
-      },
-    });
-
-    if (!response) {
-      throw new Error('Can not delete cards.');
-    }
-
-    return true;
-  }
-
-  public async getCards(owner: Web3Address): Promise<Array<Card>> {
-    const response = await this.get('autofill/card', {
-      headers: {
-        api_key: this.encryptData(owner),
-      },
-    });
-
-    if (!response) {
-      throw new Error('Can not get cards.');
-    }
-
-    return response;
-  }
-
-  public async createProfile(
-    owner: Web3Address,
-    params: ProfileParams,
-  ): Promise<boolean> {
-    const response = await this.post(
-      'autofill/profile',
-      { ...params },
-      {
-        headers: {
-          api_key: this.encryptData(owner),
-        },
-      },
-    );
-
-    if (!response) {
-      throw new Error('Can not create profile.');
-    }
-
-    return true;
+    return {
+      ...response,
+      profile: response.profile,
+      cards: response.cards.map(({ cvc, ...rest }) => ({
+        ...rest,
+        cvc: HashieldAIRepository.instance.decryptData(cvc),
+      })),
+    };
   }
 
   public async updateProfile(
     owner: Web3Address,
-    profileId: string,
     params: ProfileParams,
   ): Promise<boolean> {
-    const response = await this.patch(
-      'autofill/profile',
+    const response = await this.post(
+      'autofill',
       {
-        _id: profileId,
         ...params,
       },
       {
@@ -454,38 +422,6 @@ export class HashieldAIRepository extends BaseRepository {
     }
 
     return true;
-  }
-
-  public async deleteProfiles(
-    owner: Web3Address,
-    profileIds: Array<string>,
-  ): Promise<boolean> {
-    const response = await this.delete('autofill/profile', {
-      data: profileIds,
-      headers: {
-        api_key: this.encryptData(owner),
-      },
-    });
-
-    if (!response) {
-      throw new Error('Can not delete profiles.');
-    }
-
-    return true;
-  }
-
-  public async getProfile(owner: Web3Address): Promise<Profile> {
-    const response = await this.get('autofill/profile', {
-      headers: {
-        api_key: this.encryptData(owner),
-      },
-    });
-
-    if (!response) {
-      throw new Error('Can not get profile.');
-    }
-
-    return response;
   }
 
   public decryptData(hashedData: string): string {

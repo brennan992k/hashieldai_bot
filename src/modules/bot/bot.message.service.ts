@@ -86,28 +86,26 @@ export class BotMessagesService {
               CallbackDataKey.defiWallets,
             );
             break;
-          case JobAction.enterDefiWalletOrganization:
-            status =
-              await this.defiWalletsService.onEnteredDefiWalletOrganization(
-                ctx,
-                message,
-                lastJob,
-                CallbackDataKey.selectDefiWallet,
-                CallbackDataKey.defiWallets,
-              );
-            break;
-          case JobAction.enterWalletOfDefiWalletName:
-            status =
-              await this.defiWalletsService.onEnteredWalletOfDefiWalletName(
-                ctx,
-                message,
-                lastJob,
-                CallbackDataKey.selectWalletOfDefiWallet,
-                CallbackDataKey.selectDefiWallet,
-              );
+          case JobAction.updateDefiWallet:
+            status = await this.defiWalletsService.onEnteredUpdateDefiWallet(
+              ctx,
+              message,
+              lastJob,
+              CallbackDataKey.selectDefiWallet,
+              CallbackDataKey.defiWallets,
+            );
             break;
           case JobAction.importCredentials:
             status = await this.web2LoginsService.onImportedCredentials(
+              ctx,
+              message,
+              lastJob,
+              CallbackDataKey.web2Logins,
+              CallbackDataKey.web2Logins,
+            );
+            break;
+          case JobAction.updateCredential:
+            status = await this.web2LoginsService.onEnteredToUpdateCredential(
               ctx,
               message,
               lastJob,

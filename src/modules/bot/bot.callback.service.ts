@@ -132,17 +132,19 @@ export class BotCallbackService {
               CallbackDataKey.selectCredential,
             );
             break;
-          case CallbackDataKey.editCredentialWebsites:
-            break;
-          case CallbackDataKey.editCredentialUsername:
-            break;
-          case CallbackDataKey.editCredentialPassword:
-            break;
-          case CallbackDataKey.editCredentialAutoLogin:
-            break;
-          case CallbackDataKey.editCredentialAutoFill:
-            break;
-          case CallbackDataKey.editCredentialProtectItem:
+          case CallbackDataKey.updateCredentialWebsites:
+          case CallbackDataKey.updateCredentialUsername:
+          case CallbackDataKey.updateCredentialPassword:
+          case CallbackDataKey.updateCredentialAutoLogin:
+          case CallbackDataKey.updateCredentialAutoFill:
+          case CallbackDataKey.updateCredentialProtectItem:
+            this.web2LoginsService.onUpdateCredential(
+              ctx,
+              callback_data.params as string,
+              callback_data.key,
+              CallbackDataKey.selectCredential,
+              CallbackDataKey.selectCredential,
+            );
             break;
           case CallbackDataKey.defiWallets:
             this.defiWalletsService.onDefiWallets(ctx);
@@ -182,11 +184,20 @@ export class BotCallbackService {
               CallbackDataKey.selectDefiWallet,
             );
             break;
-          case CallbackDataKey.editDefiWalletOrganization:
-            this.defiWalletsService.onEnterDefiWalletOrganization(
-              ctx,
-              callback_data.params as string,
-            );
+          case CallbackDataKey.updateDefiWalletOrganization:
+          case CallbackDataKey.updateWalletNameOfDefiWallet:
+            (() => {
+              const [defiWalletId, walletIndex] =
+                callback_data.params.split('_');
+              this.defiWalletsService.onUpdateDefiWallet(
+                ctx,
+                defiWalletId,
+                callback_data.key,
+                parseInt(walletIndex),
+                CallbackDataKey.selectDefiWallet,
+                CallbackDataKey.selectDefiWallet,
+              );
+            })();
             break;
           case CallbackDataKey.selectWalletOfDefiWallet:
             (() => {
@@ -227,21 +238,42 @@ export class BotCallbackService {
               );
             })();
             break;
-          case CallbackDataKey.editWalletOfDefiWallet:
+          case CallbackDataKey.autoFill:
+            this.autoFillService.onAutoFill(ctx);
+            break;
+          case CallbackDataKey.refreshDefiWallets:
+            this.autoFillService.onRefreshAutoFill(
+              ctx,
+              CallbackDataKey.autoFill,
+            );
+            break;
+          case CallbackDataKey.updateProfileFirstName:
+          case CallbackDataKey.updateProfileLastName:
+          case CallbackDataKey.updateCredentialEmail:
+          case CallbackDataKey.updateProfilePhone:
+          case CallbackDataKey.updateProfileCity:
+          case CallbackDataKey.updateProfileDateOfBirth:
+          case CallbackDataKey.updateProfilePostcode:
+          case CallbackDataKey.updateProfileState:
+          case CallbackDataKey.updateProfileGender:
+          case CallbackDataKey.updateCardNumberOfProfile:
+          case CallbackDataKey.updateCardCVCOfProfile:
+          case CallbackDataKey.updateCardExpDateOfProfile:
             (() => {
-              const [defiWalletId, walletIndex] =
-                callback_data.params.split('_');
-              this.defiWalletsService.onEnterWalletOfDefiWalletName(
+              const [cardIndex] = callback_data.params.split('_');
+              this.autoFillService.onUpdateProfile(
                 ctx,
-                defiWalletId,
-                parseInt(walletIndex),
-                CallbackDataKey.selectDefiWallet,
-                CallbackDataKey.selectDefiWallet,
+                callback_data.key,
+                parseInt(cardIndex),
+                CallbackDataKey.autoFill,
+                CallbackDataKey.autoFill,
               );
             })();
             break;
-          case CallbackDataKey.autoFill:
-            this.autoFillService.onAutoFill(ctx);
+          case CallbackDataKey.selectProfileCard:
+            (() => {
+              const [cardIndex] = callback_data.params.split('_');
+            })();
             break;
           case CallbackDataKey.passwordHealth:
             this.passwordHealthService.onPasswordHealth(ctx);
