@@ -484,6 +484,15 @@ export class BotDefiWalletsService {
           }),
           [
             {
+              text: 'Add New Wallet',
+              callback_data: new CallbackData<string>(
+                CallbackDataKey.updateDefiWalletWallets,
+                `${defiWallet._id}`,
+              ).toJSON(),
+            },
+          ],
+          [
+            {
               text: '✏️ Organization',
               callback_data: new CallbackData<string>(
                 CallbackDataKey.updateDefiWalletOrganization,

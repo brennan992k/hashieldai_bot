@@ -158,14 +158,14 @@ export class BotAutoFillService {
             {
               text: '🗑 Delete',
               callback_data: new CallbackData<number>(
-                CallbackDataKey.deleteWalletOfDefiWallet,
+                CallbackDataKey.deleteCardOfProfile,
                 cardIndex,
               ).toJSON(),
             },
             {
               text: '🔄 Refresh',
               callback_data: new CallbackData<number>(
-                CallbackDataKey.refreshWalletOfDefiWallet,
+                CallbackDataKey.refreshCardOfProfile,
                 cardIndex,
               ).toJSON(),
             },
@@ -209,12 +209,12 @@ export class BotAutoFillService {
       this.service.warningReply(ctx, error?.message);
 
       CommonLogger.instance.error(
-        `onSelectWalletOfDefiWallet error ${error?.message}`,
+        `onSelectCardOfProfile error ${error?.message}`,
       );
     }
   }
 
-  public async buildProfileCardsOptions(
+  public buildProfileCardsOptions(
     @Ctx() ctx: Context,
     profile: Profile,
     backTo?: CallbackDataKey,
@@ -228,12 +228,21 @@ export class BotAutoFillService {
               {
                 text: `Card ${index + 1}: ${card.card_number}`,
                 callback_data: new CallbackData<number>(
-                  CallbackDataKey.selectDefiWallet,
+                  CallbackDataKey.selectCardOfProfile,
                   index,
                 ).toJSON(),
               },
             ];
           }),
+          [
+            {
+              text: '➕ Add New Card',
+              callback_data: new CallbackData<CallbackDataKey>(
+                CallbackDataKey.updateProfileCards,
+                CallbackDataKey.profileCards,
+              ).toJSON(),
+            },
+          ],
           [
             {
               text: '🔄 Refresh',
@@ -475,7 +484,7 @@ export class BotAutoFillService {
       this.service.warningReply(ctx, error?.message);
 
       CommonLogger.instance.error(
-        `onEnteredDefiWalletOrganization error ${error.message}`,
+        `onEnteredToUpdateProfile error ${error.message}`,
       );
 
       return JobStatus.inProcess;
