@@ -332,7 +332,7 @@ export class BotDefiWalletsService {
             };
           }
           break;
-        case CallbackDataKey.updateCredentialUsername:
+        case CallbackDataKey.updateWalletNameOfDefiWallet:
           if (isEmpty(message.text)) {
             error = 'The wallet name is invalid.';
           } else {

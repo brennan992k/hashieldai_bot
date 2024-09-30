@@ -89,12 +89,16 @@ export class BotCallbackService {
             this.walletsService.onConnectWallet(
               ctx,
               callback_data.params as ChainId,
+              CallbackDataKey.wallets,
+              CallbackDataKey.wallets,
             );
             break;
           case CallbackDataKey.generateWallet:
             this.walletsService.onGenerateWallet(
               ctx,
               callback_data.params as ChainId,
+              CallbackDataKey.wallets,
+              CallbackDataKey.wallets,
             );
             break;
           case CallbackDataKey.selectWallet:
@@ -149,10 +153,18 @@ export class BotCallbackService {
             this.web2LoginsService.onWeb2Logins(ctx);
             break;
           case CallbackDataKey.templateCredentials:
-            this.web2LoginsService.onTemplateCredentials(ctx);
+            this.web2LoginsService.onTemplateCredentials(
+              ctx,
+              CallbackDataKey.web2Logins,
+              CallbackDataKey.web2Logins,
+            );
             break;
           case CallbackDataKey.importCredentials:
-            this.web2LoginsService.onImportCredentials(ctx);
+            this.web2LoginsService.onImportCredentials(
+              ctx,
+              CallbackDataKey.web2Logins,
+              CallbackDataKey.web2Logins,
+            );
             break;
           case CallbackDataKey.refreshWeb2Logins:
             this.web2LoginsService.onRefreshWeb2Logins(
@@ -181,10 +193,12 @@ export class BotCallbackService {
               ctx,
               callback_data.params as string,
               CallbackDataKey.selectCredential,
+              CallbackDataKey.web2Logins,
             );
             break;
           case CallbackDataKey.updateCredentialWebsites:
           case CallbackDataKey.updateCredentialUsername:
+          case CallbackDataKey.updateCredentialEmail:
           case CallbackDataKey.updateCredentialPassword:
           case CallbackDataKey.updateCredentialAutoLogin:
           case CallbackDataKey.updateCredentialAutoFill:

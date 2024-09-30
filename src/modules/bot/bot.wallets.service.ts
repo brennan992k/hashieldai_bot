@@ -337,12 +337,22 @@ export class BotWalletsService {
     }
   }
 
-  public async onGenerateWallet(@Ctx() ctx: Context, chainId: ChainId) {
-    this.onEnterWalletName(ctx, chainId, false);
+  public async onGenerateWallet(
+    @Ctx() ctx: Context,
+    chainId: ChainId,
+    backFrom?: CallbackDataKey,
+    backTo?: CallbackDataKey,
+  ) {
+    this.onEnterWalletName(ctx, chainId, false, backFrom, backTo);
   }
 
-  public async onConnectWallet(@Ctx() ctx: Context, chainId: ChainId) {
-    this.onEnterWalletName(ctx, chainId, true);
+  public async onConnectWallet(
+    @Ctx() ctx: Context,
+    chainId: ChainId,
+    backFrom?: CallbackDataKey,
+    backTo?: CallbackDataKey,
+  ) {
+    this.onEnterWalletName(ctx, chainId, true, backFrom, backTo);
   }
 
   private buildGenerateWalletOptionsWith(
@@ -480,7 +490,7 @@ export class BotWalletsService {
 
       this.onWallets(ctx, backFrom, backTo);
 
-      this.service.shortReply(ctx, '💚 Set default successfully.');
+      this.service.shortReply(ctx, '💚 The wallet is used successfully.');
     } catch (error) {
       this.service.warningReply(ctx, error?.message);
 

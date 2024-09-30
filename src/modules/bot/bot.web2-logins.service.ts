@@ -115,7 +115,7 @@ export class BotWeb2LoginsService {
         );
       }
 
-      this.onWeb2Logins(ctx, backFrom, backTo);
+      this.onWeb2Logins(ctx, backFrom);
 
       this.service.shortReply(ctx, `💚 Deleted successfully.`);
     } catch (error) {
@@ -164,7 +164,7 @@ export class BotWeb2LoginsService {
       }
 
       let error: string;
-      let body: CredentialParams = {};
+      let body: CredentialParams = { ...credential };
       switch (type) {
         case CallbackDataKey.updateCredentialWebsites:
           const websites = message.text.split(',');
@@ -176,6 +176,7 @@ export class BotWeb2LoginsService {
             error = 'Websites are invalid.';
           } else {
             body = {
+              ...body,
               url: websites,
             };
           }
@@ -185,25 +186,31 @@ export class BotWeb2LoginsService {
             error = 'Username is invalid.';
           } else {
             body = {
+              ...body,
               username: message.text,
             };
           }
+          break;
         case CallbackDataKey.updateCredentialEmail:
           if (!validator.isEmail(message.text)) {
             error = 'Email is invalid.';
           } else {
             body = {
+              ...body,
               email: message.text,
             };
           }
+          break;
         case CallbackDataKey.updateCredentialPassword:
           if (isEmpty(message.text)) {
             error = 'Password is invalid.';
           } else {
             body = {
+              ...body,
               password: message.text,
             };
           }
+          break;
         default:
           break;
       }
@@ -220,9 +227,11 @@ export class BotWeb2LoginsService {
         );
       }
 
-      const info = getWebsiteInfo({ ...credential, ...body }.url[0]);
+      const newCredential = { ...credential, ...body };
+      const info = getWebsiteInfo(newCredential.url[0]);
+
       const reply = this.helperService.buildLinesMessage([
-        `<b>👝 Web2 Logins - ${info.name}</b>`,
+        `<b>💳 Web2 Logins - ${info.name}</b> (<a href="${info.url}">Open Link</a>)\n`,
       ]);
 
       await this.service.editMessage(
@@ -230,7 +239,7 @@ export class BotWeb2LoginsService {
         chat.id,
         editMessageId,
         reply,
-        this.buildSelectCredentialOptions(ctx, credential, backTo),
+        this.buildSelectCredentialOptions(ctx, newCredential, backTo),
       );
 
       this.service.deleteMessage(ctx, chat.id, deleteMessageId);
@@ -270,7 +279,7 @@ export class BotWeb2LoginsService {
         case CallbackDataKey.updateCredentialAutoLogin:
         case CallbackDataKey.updateCredentialAutoFill:
         case CallbackDataKey.updateCredentialProtectItem:
-          let body = {};
+          let body = { ...credential };
           switch (type) {
             case CallbackDataKey.updateCredentialAutoLogin:
               body = { ...body, autoLogin: !credential.autoLogin };
@@ -361,6 +370,7 @@ export class BotWeb2LoginsService {
 
     return {
       parse_mode: 'HTML',
+      disable_web_page_preview: true,
       reply_markup: {
         inline_keyboard: [
           [
@@ -387,7 +397,7 @@ export class BotWeb2LoginsService {
             {
               text: `✏️ Email: ${credential.email ? credential.email : '--'}`,
               callback_data: new CallbackData<string>(
-                CallbackDataKey.updateCredentialUsername,
+                CallbackDataKey.updateCredentialEmail,
                 `${credential._id}`,
               ).toJSON(),
             },

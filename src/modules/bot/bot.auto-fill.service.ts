@@ -488,9 +488,7 @@ export class BotAutoFillService {
             timestamp: new Date().getTime(),
           });
 
-          CommonLogger.instance.debug(
-            `onUpdateDefiWallet ${JSON.stringify(job)}`,
-          );
+          CommonLogger.instance.debug(`onUpdateProfile ${JSON.stringify(job)}`);
 
           if (!job) {
             throw new InternalServerErrorException('Cant not create job.');
@@ -500,7 +498,7 @@ export class BotAutoFillService {
     } catch (error) {
       this.service.warningReply(ctx, error?.message);
 
-      CommonLogger.instance.error(`onUpdateDefiWallet error ${error?.message}`);
+      CommonLogger.instance.error(`onUpdateProfile error ${error?.message}`);
     }
   }
 
