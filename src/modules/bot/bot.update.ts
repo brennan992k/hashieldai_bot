@@ -9,6 +9,10 @@ import { BotPollService } from './bot.poll.service';
 import { CommonLogger } from 'src/common/logger';
 import { BotAboutService } from './bot.about.service';
 import { BotWeb2LoginsService } from './bot.web2-logins.service';
+import { BotDefiWalletsService } from './bot.defi-wallets.service';
+import { BotAutoFillService } from './bot.auto-fill.service';
+import { BotPasswordHealthService } from './bot.password-health.service';
+import { BotWalletHealthService } from './bot.wallet-health.service';
 
 @Update()
 export class BotUpdate {
@@ -18,7 +22,11 @@ export class BotUpdate {
     protected readonly menuService: BotMenuService,
     protected readonly walletsService: BotWalletsService,
     protected readonly web2LoginsService: BotWeb2LoginsService,
-    protected readonly faqService: BotAboutService,
+    protected readonly defiWalletsService: BotDefiWalletsService,
+    protected readonly autoFillService: BotAutoFillService,
+    protected readonly passwordHealthService: BotPasswordHealthService,
+    protected readonly walletHealthService: BotWalletHealthService,
+    protected readonly aboutService: BotAboutService,
     protected readonly messagesService: BotMessagesService,
     protected readonly pollService: BotPollService,
   ) {}
@@ -45,27 +53,27 @@ export class BotUpdate {
 
   @Command('defiwallets')
   async onDefiWallets(@Ctx() ctx) {
-    // this.tradingService.onTrading(ctx);
+    this.defiWalletsService.onDefiWallets(ctx);
   }
 
   @Command('autoFill')
   async onAutoFill(@Ctx() ctx) {
-    // this.tradingService.onTrading(ctx);
+    this.autoFillService.onAutoFill(ctx);
   }
 
   @Command('passwordhealth')
   async onPasswordHealth(@Ctx() ctx) {
-    // this.tradingService.onTrading(ctx);
+    this.passwordHealthService.onPasswordHealth(ctx);
   }
 
   @Command('wallethealth')
   async onWalletHealth(@Ctx() ctx) {
-    // this.tradingService.onTrading(ctx);
+    this.walletHealthService.onWalletHealth(ctx);
   }
 
   @Command('about')
   async onAbout(@Ctx() ctx) {
-    this.faqService.onAbout(ctx);
+    this.aboutService.onAbout(ctx);
   }
 
   @On('callback_query')
