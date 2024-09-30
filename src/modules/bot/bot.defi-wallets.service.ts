@@ -101,12 +101,7 @@ export class BotDefiWalletsService {
 
       const isDeleted = await this.updateDefiWallet(ctx, defiWalletId, {
         ...defiWallet,
-        wallets: defiWallet.wallets.reduce((list, item, index) => {
-          if (index != walletIndex) {
-            list.push(item);
-          }
-          return list;
-        }, []),
+        wallets: defiWallet.wallets.filter((_, index) => index != walletIndex),
       });
 
       if (!isDeleted) {
@@ -402,7 +397,7 @@ export class BotDefiWalletsService {
     @Ctx() ctx,
     defiWalletId: string,
     type: CallbackDataKey,
-    walletIndex?: number,
+    val?: string | number,
     backFrom?: CallbackDataKey,
     backTo?: CallbackDataKey,
   ) {
@@ -439,7 +434,7 @@ export class BotDefiWalletsService {
             deleteMessageId: deleteMessage.message_id,
             editMessageId: editMessage.message_id,
             defiWalletId,
-            walletIndex,
+            walletIndex: Number(val),
             type,
           };
 
@@ -535,7 +530,7 @@ export class BotDefiWalletsService {
         `<b>👝 Defi Wallets - ${defiWallet.organization}</b>`,
       ]);
 
-      await this.helperService.editOrSendMessage(
+      this.helperService.editOrSendMessage(
         ctx,
         reply,
         this.buildSelectDefiWalletOptions(ctx, defiWallet, backTo),
@@ -554,7 +549,7 @@ export class BotDefiWalletsService {
     backTo?: CallbackDataKey,
   ) {
     try {
-      await this.onDefiWallets(ctx, refreshFrom, backTo);
+      this.onDefiWallets(ctx, refreshFrom, backTo);
 
       this.service.shortReply(ctx, `💚 Refreshed successfully.`);
     } catch (error) {
@@ -599,7 +594,7 @@ export class BotDefiWalletsService {
                 const [wallet_name, private_key] = itemD[item].split(',');
                 list.push({
                   wallet_name,
-                  private_key,
+                  private_key: private_key?.trim(),
                 });
                 return list;
               },

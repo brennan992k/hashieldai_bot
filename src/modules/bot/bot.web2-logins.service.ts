@@ -262,6 +262,7 @@ export class BotWeb2LoginsService {
     @Ctx() ctx,
     credentialId: string,
     type: CallbackDataKey,
+    val?: string | number,
     backFrom?: CallbackDataKey,
     backTo?: CallbackDataKey,
   ) {

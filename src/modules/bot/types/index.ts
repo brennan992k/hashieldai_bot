@@ -58,12 +58,14 @@ export enum ProfileKey {
   updateProfileState = 'pups',
   updateProfilePostcode = 'puppc',
   updateProfilePhone = 'pupp',
-  selectProfileCards = 'pspcs',
-  selectProfileCard = 'pspc',
+  profileCards = 'ppcs',
+  selectCardOfProfile = 'pscop',
   updateCardNumberOfProfile = 'pucnop',
   updateCardExpDateOfProfile = 'pucedop',
   updateCardCVCOfProfile = 'puccvcop',
-  refreshProfile = 'prp',
+  refreshCardOfProfile = 'prcop',
+  deleteCardOfProfile = 'pdcop',
+  refreshAutoFill = 'praf',
 }
 
 export enum CallbackDataKey {
@@ -126,11 +128,11 @@ export enum CallbackDataKey {
   updateCardNumberOfProfile = ProfileKey.updateCardNumberOfProfile,
   updateCardExpDateOfProfile = ProfileKey.updateCardNumberOfProfile,
   updateCardCVCOfProfile = ProfileKey.updateCardNumberOfProfile,
-  selectProfileCards = ProfileKey.selectProfileCards,
-  selectProfileCard = ProfileKey.selectProfileCard,
-  refreshProfile = ProfileKey.refreshProfile,
-
-  refreshAutoFill = 'refreshAutoFill',
+  profileCards = ProfileKey.profileCards,
+  selectCardOfProfile = ProfileKey.selectCardOfProfile,
+  refreshCardOfProfile = ProfileKey.refreshCardOfProfile,
+  deleteCardOfProfile = ProfileKey.deleteCardOfProfile,
+  refreshAutoFill = ProfileKey.refreshAutoFill,
 }
 
 export enum JobAction {

@@ -203,13 +203,18 @@ export class BotCallbackService {
           case CallbackDataKey.updateCredentialAutoLogin:
           case CallbackDataKey.updateCredentialAutoFill:
           case CallbackDataKey.updateCredentialProtectItem:
-            this.web2LoginsService.onUpdateCredential(
-              ctx,
-              callback_data.params as string,
-              callback_data.key,
-              CallbackDataKey.selectCredential,
-              CallbackDataKey.selectCredential,
-            );
+            (() => {
+              const [credentialId, val] = callback_data.params.split('_');
+              this.web2LoginsService.onUpdateCredential(
+                ctx,
+                credentialId,
+                callback_data.key,
+                val,
+                CallbackDataKey.selectCredential,
+                CallbackDataKey.selectCredential,
+              );
+            })();
+
             break;
           default:
             break;
@@ -278,13 +283,12 @@ export class BotCallbackService {
           case CallbackDataKey.updateDefiWalletOrganization:
           case CallbackDataKey.updateWalletNameOfDefiWallet:
             (() => {
-              const [defiWalletId, walletIndex] =
-                callback_data.params.split('_');
+              const [defiWalletId, val] = callback_data.params.split('_');
               this.defiWalletsService.onUpdateDefiWallet(
                 ctx,
                 defiWalletId,
                 callback_data.key,
-                parseInt(walletIndex),
+                val,
                 CallbackDataKey.selectDefiWallet,
                 CallbackDataKey.selectDefiWallet,
               );
@@ -357,7 +361,6 @@ export class BotCallbackService {
             break;
           case CallbackDataKey.updateProfileFirstName:
           case CallbackDataKey.updateProfileLastName:
-          case CallbackDataKey.updateCredentialEmail:
           case CallbackDataKey.updateProfilePhone:
           case CallbackDataKey.updateProfileCity:
           case CallbackDataKey.updateProfileDateOfBirth:
@@ -368,19 +371,54 @@ export class BotCallbackService {
           case CallbackDataKey.updateCardCVCOfProfile:
           case CallbackDataKey.updateCardExpDateOfProfile:
             (() => {
-              const [cardIndex] = callback_data.params.split('_');
+              const [val] = callback_data.params.split('_');
               this.autoFillService.onUpdateProfile(
                 ctx,
                 callback_data.key,
+                val,
+                CallbackDataKey.autoFill,
+                CallbackDataKey.autoFill,
+              );
+            })();
+            break;
+          case CallbackDataKey.profileCards:
+            this.autoFillService.onProfileCards(
+              ctx,
+              CallbackDataKey.autoFill,
+              CallbackDataKey.autoFill,
+            );
+            break;
+          case CallbackDataKey.selectCardOfProfile:
+            (() => {
+              const [cardIndex] = callback_data.params.split('_');
+              this.autoFillService.onSelectCardOfProfile(
+                ctx,
                 parseInt(cardIndex),
                 CallbackDataKey.autoFill,
                 CallbackDataKey.autoFill,
               );
             })();
             break;
-          case CallbackDataKey.selectProfileCard:
+          case CallbackDataKey.refreshCardOfProfile:
             (() => {
               const [cardIndex] = callback_data.params.split('_');
+              this.autoFillService.onRefreshCardOfProfile(
+                ctx,
+                parseInt(cardIndex),
+                CallbackDataKey.selectCardOfProfile,
+                CallbackDataKey.profileCards,
+              );
+            })();
+            break;
+          case CallbackDataKey.deleteCardOfProfile:
+            (() => {
+              const [cardIndex] = callback_data.params.split('_');
+              this.autoFillService.onDeleteCardOfProfile(
+                ctx,
+                parseInt(cardIndex),
+                CallbackDataKey.selectCardOfProfile,
+                CallbackDataKey.profileCards,
+              );
             })();
             break;
           default:

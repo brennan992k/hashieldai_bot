@@ -75,11 +75,12 @@ export class BotBackService {
           case CallbackDataKey.autoFill:
             this.autoFillService.onAutoFill(ctx, callback_data.key);
             break;
-          case CallbackDataKey.passwordHealth:
-            this.passwordHealthService.onPasswordHealth(ctx, callback_data.key);
-            break;
-          case CallbackDataKey.walletHealth:
-            this.walletHealthService.onWalletHealth(ctx, callback_data.key);
+          case CallbackDataKey.profileCards:
+            this.autoFillService.onProfileCards(
+              ctx,
+              callback_data.key,
+              CallbackDataKey.autoFill,
+            );
             break;
           default:
             break;

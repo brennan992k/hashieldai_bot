@@ -14,7 +14,6 @@ import { CallbackData, CallbackDataKey, JobAction, JobStatus } from './types';
 import { BotHelperService } from './bot.helper.service';
 import { BotWalletsService } from './bot.wallets.service';
 import {
-  Card,
   Gender,
   HashieldAIRepository,
   Profile,
@@ -29,7 +28,6 @@ import {
   isDateString,
   isEmpty,
   isNumberString,
-  isPhoneNumber,
   isString,
 } from 'class-validator';
 
@@ -74,6 +72,7 @@ export class BotAutoFillService {
       }
 
       const isDeleted = await this.updateProfile(ctx, {
+        ...profile,
         cards: profile.cards.filter((_, index) => cardIndex != index),
       });
 
@@ -81,7 +80,7 @@ export class BotAutoFillService {
         throw new InternalServerErrorException('Can not delete the card.');
       }
 
-      await this.onAutoFill(ctx, backTo);
+      this.onProfileCards(ctx, backTo);
 
       this.service.shortReply(ctx, `💚 Deleted successfully.`);
     } catch (error) {
@@ -100,7 +99,7 @@ export class BotAutoFillService {
     backTo?: CallbackDataKey,
   ) {
     try {
-      await this.onSelectCardOfProfile(ctx, cardIndex, refreshFrom, backTo);
+      this.onSelectCardOfProfile(ctx, cardIndex, refreshFrom, backTo);
 
       this.service.shortReply(ctx, `💚 Refreshed successfully.`);
     } catch (error) {
@@ -187,7 +186,7 @@ export class BotAutoFillService {
       const profile = await this.getProfile(ctx);
 
       if (!profile) {
-        throw new BadRequestException('The defi wallet is not found.');
+        throw new BadRequestException('The profile is not found.');
       }
 
       const card = profile.cards[cardIndex];
@@ -196,9 +195,11 @@ export class BotAutoFillService {
         throw new BadRequestException('The card is not found.');
       }
 
-      const reply = `<b>📝 Auto Fill - Card ${card.card_number}</b>`;
+      const reply = this.helperService.buildLinesMessage([
+        `<b>📝 Auto Fill - Card ${card.card_number}</b>`,
+      ]);
 
-      await this.helperService.editOrSendMessage(
+      this.helperService.editOrSendMessage(
         ctx,
         reply,
         this.buildSelectCardOfProfileOptions(ctx, profile, cardIndex, backTo),
@@ -213,7 +214,69 @@ export class BotAutoFillService {
     }
   }
 
-  public async onEnteredUpdateProfile(
+  public async buildProfileCardsOptions(
+    @Ctx() ctx: Context,
+    profile: Profile,
+    backTo?: CallbackDataKey,
+  ) {
+    return {
+      parse_mode: 'HTML',
+      reply_markup: {
+        inline_keyboard: [
+          ...profile.cards.map((card, index) => {
+            return [
+              {
+                text: `Card ${index + 1}: ${card.card_number}`,
+                callback_data: new CallbackData<number>(
+                  CallbackDataKey.selectDefiWallet,
+                  index,
+                ).toJSON(),
+              },
+            ];
+          }),
+          [
+            {
+              text: '🔄 Refresh',
+              callback_data: new CallbackData<CallbackDataKey>(
+                CallbackDataKey.refreshAutoFill,
+                CallbackDataKey.refreshAutoFill,
+              ).toJSON(),
+            },
+          ],
+          this.helperService.buildBacKAndCloseButtons(backTo),
+        ],
+      },
+    };
+  }
+
+  public async onProfileCards(
+    @Ctx() ctx: Context,
+    backFrom?: CallbackDataKey,
+    backTo?: CallbackDataKey,
+  ) {
+    try {
+      if (await this.authService.onEnterAccessToken(ctx)) return;
+
+      const profile = await this.getProfile(ctx);
+
+      const reply = this.helperService.buildLinesMessage([
+        `<b>📝 Auto Fill - Cards</b>`,
+      ]);
+
+      this.helperService.editOrSendMessage(
+        ctx,
+        reply,
+        this.buildProfileCardsOptions(ctx, profile, backTo),
+        backFrom,
+      );
+    } catch (error) {
+      this.service.warningReply(ctx, error?.message);
+
+      CommonLogger.instance.error(`onAutoFill error ${error?.message}`);
+    }
+  }
+
+  public async onEnteredToUpdateProfile(
     @Ctx() ctx: Context,
     @Message() message,
     job: Job,
@@ -229,7 +292,7 @@ export class BotAutoFillService {
       const profile = await this.getProfile(ctx);
 
       if (!profile) {
-        throw new BadRequestException('The defi wallet is not found.');
+        throw new BadRequestException('The profile is not found.');
       }
 
       let error: string;
@@ -318,7 +381,7 @@ export class BotAutoFillService {
           }
           break;
         case CallbackDataKey.updateProfilePhone:
-          if (!isPhoneNumber(message.text)) {
+          if (!isNumberString(message.text)) {
             error = 'The phone is invalid.';
           } else {
             body = {
@@ -392,17 +455,17 @@ export class BotAutoFillService {
         throw new InternalServerErrorException('Can not update the profile.');
       }
 
-      const newProfile = { ...profile, ...body };
+      const newProfile = { ...profile, ...body } as Profile;
       const reply = this.helperService.buildLinesMessage([
         `<b>📝 Auto Fill</b>`,
       ]);
 
-      await this.service.editMessage(
+      this.service.editMessage(
         ctx,
         chat.id,
         editMessageId,
         reply,
-        this.buildProfileOptions(ctx, newProfile as Profile, backTo),
+        this.buildProfileOptions(ctx, newProfile, backTo),
       );
 
       this.service.deleteMessage(ctx, chat.id, deleteMessageId);
@@ -424,7 +487,7 @@ export class BotAutoFillService {
   public async onUpdateProfile(
     @Ctx() ctx,
     type: CallbackDataKey,
-    cardIndex?: number,
+    val?: string | number,
     backFrom?: CallbackDataKey,
     backTo?: CallbackDataKey,
   ) {
@@ -435,10 +498,36 @@ export class BotAutoFillService {
       const profile = await this.getProfile(ctx);
 
       if (!profile) {
-        throw new BadRequestException('Profile is not found.');
+        throw new BadRequestException('The profile is not found.');
       }
 
       switch (type) {
+        case CallbackDataKey.updateProfileGender:
+          let body = { ...profile };
+          switch (type) {
+            case CallbackDataKey.updateProfileGender:
+              body = {
+                ...body,
+                profile: {
+                  ...body.profile,
+                  gender: val as Gender,
+                },
+              };
+              break;
+            default:
+              break;
+          }
+
+          const isUpdated = await this.updateProfile(ctx, body);
+
+          if (!isUpdated) {
+            throw new InternalServerErrorException(
+              'Can not update the profile.',
+            );
+          }
+
+          this.onAutoFill(ctx, backFrom, backTo);
+          break;
         default:
           const reply = (() => {
             switch (type) {
@@ -476,7 +565,7 @@ export class BotAutoFillService {
           const params: UpdateProfileJobParams = {
             deleteMessageId: deleteMessage.message_id,
             editMessageId: editMessage.message_id,
-            cardIndex,
+            cardIndex: Number(val),
             type,
           };
 
@@ -491,7 +580,7 @@ export class BotAutoFillService {
           CommonLogger.instance.debug(`onUpdateProfile ${JSON.stringify(job)}`);
 
           if (!job) {
-            throw new InternalServerErrorException('Cant not create job.');
+            throw new InternalServerErrorException('Cant not create the job.');
           }
           break;
       }
@@ -508,7 +597,7 @@ export class BotAutoFillService {
     backTo?: CallbackDataKey,
   ) {
     try {
-      await this.onAutoFill(ctx, refreshFrom, backTo);
+      this.onAutoFill(ctx, refreshFrom, backTo);
 
       this.service.shortReply(ctx, `💚 Refreshed successfully.`);
     } catch (error) {
@@ -552,8 +641,6 @@ export class BotAutoFillService {
                 CallbackDataKey.autoFill,
               ).toJSON(),
             },
-          ],
-          [
             {
               text: `✏️ Last Name: ${
                 profileDetail.last_name ? profileDetail.last_name : '--'
@@ -573,7 +660,7 @@ export class BotAutoFillService {
               ).toJSON(),
             },
           ],
-          ...genders.map((gender) => ({
+          genders.map((gender) => ({
             text: `${profileDetail.gender == gender.value ? '✅' : ''} ${
               gender.label
             }`,
@@ -603,8 +690,6 @@ export class BotAutoFillService {
                 CallbackDataKey.autoFill,
               ).toJSON(),
             },
-          ],
-          [
             {
               text: `✏️ State: ${
                 profileDetail.state ? profileDetail.state : '--'
@@ -625,10 +710,8 @@ export class BotAutoFillService {
                 CallbackDataKey.autoFill,
               ).toJSON(),
             },
-          ],
-          [
             {
-              text: `✏️ Phone Number: ${
+              text: `✏️ Phone: ${
                 profileDetail.phone ? profileDetail.phone : '--'
               }`,
               callback_data: new CallbackData<CallbackDataKey>(
@@ -641,7 +724,7 @@ export class BotAutoFillService {
             {
               text: `Cards`,
               callback_data: new CallbackData<CallbackDataKey>(
-                CallbackDataKey.selectProfileCards,
+                CallbackDataKey.profileCards,
                 CallbackDataKey.autoFill,
               ).toJSON(),
             },
@@ -650,7 +733,7 @@ export class BotAutoFillService {
             {
               text: 'Refresh',
               callback_data: new CallbackData<CallbackDataKey>(
-                CallbackDataKey.refreshProfile,
+                CallbackDataKey.refreshAutoFill,
                 CallbackDataKey.autoFill,
               ).toJSON(),
             },
@@ -675,7 +758,7 @@ export class BotAutoFillService {
         `<b>📝 Auto Fill</b>`,
       ]);
 
-      await this.helperService.editOrSendMessage(
+      this.helperService.editOrSendMessage(
         ctx,
         reply,
         this.buildProfileOptions(ctx, profile, backTo),
@@ -684,7 +767,7 @@ export class BotAutoFillService {
     } catch (error) {
       this.service.warningReply(ctx, error?.message);
 
-      CommonLogger.instance.error(`onProfile error ${error?.message}`);
+      CommonLogger.instance.error(`onAutoFill error ${error?.message}`);
     }
   }
 
@@ -697,10 +780,36 @@ export class BotAutoFillService {
       );
     }
 
-    let profile = CommonCache.instance.get(this._buildCacheKey(wallet.address));
+    let profile: Profile = CommonCache.instance.get(
+      this._buildCacheKey(wallet.address),
+    );
 
     if (sync || !profile) {
-      profile = await HashieldAIRepository.instance.getProfile(wallet.address);
+      profile = await (async () => {
+        try {
+          return await HashieldAIRepository.instance.getProfile(wallet.address);
+        } catch (error) {
+          return {
+            _id: undefined,
+            owner: wallet.address,
+            __v: undefined,
+            profile: {
+              first_name: undefined,
+              last_name: undefined,
+              gender: Gender.male,
+              birthday: '1/1/1975',
+              city: undefined,
+              state: undefined,
+              post_code: undefined,
+              phone: undefined,
+            },
+            cards: [],
+            is_deleted: false,
+            createdAt: undefined,
+            updatedAt: undefined,
+          };
+        }
+      })();
     }
 
     CommonLogger.instance.log(profile);

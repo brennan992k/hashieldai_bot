@@ -117,6 +117,15 @@ export class BotMessagesService {
               CallbackDataKey.web2Logins,
             );
             break;
+          case JobAction.updateProfile:
+            status = await this.autoFillService.onEnteredToUpdateProfile(
+              ctx,
+              message,
+              lastJob,
+              CallbackDataKey.autoFill,
+              CallbackDataKey.autoFill,
+            );
+            break;
           default:
             break;
         }
