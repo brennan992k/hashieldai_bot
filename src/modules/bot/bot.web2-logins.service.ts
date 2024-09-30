@@ -350,7 +350,7 @@ export class BotWeb2LoginsService {
           );
 
           if (!job) {
-            throw new InternalServerErrorException('Cant not create job.');
+            throw new InternalServerErrorException('Cant not create the job.');
           }
           break;
       }
@@ -625,7 +625,7 @@ export class BotWeb2LoginsService {
       CommonLogger.instance.debug(`onImportCredentials ${JSON.stringify(job)}`);
 
       if (!job) {
-        throw new InternalServerErrorException('Cant not create job.');
+        throw new InternalServerErrorException('Cant not create the job.');
       }
     } catch (error) {
       this.service.warningReply(ctx, error?.message);

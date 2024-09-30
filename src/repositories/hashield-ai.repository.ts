@@ -204,8 +204,8 @@ export class HashieldAIRepository extends BaseRepository {
     const response: { data: Array<Credential> } = await this.patch(
       'web2',
       {
-        _id: credentialId,
         ...params,
+        _id: credentialId,
       },
       {
         headers: {
@@ -308,8 +308,8 @@ export class HashieldAIRepository extends BaseRepository {
     const response = await this.patch(
       'defi',
       {
-        _id: defiWalletId,
         ...params,
+        _id: defiWalletId,
       },
       {
         headers: {

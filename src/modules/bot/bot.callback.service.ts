@@ -225,17 +225,25 @@ export class BotCallbackService {
   async onDefiWalletCallbackQuery(@Ctx() ctx) {
     try {
       if (ctx.update && ctx.update.callback_query) {
-        const { data, message } = ctx.update.callback_query;
+        const { data } = ctx.update.callback_query;
         const callback_data = CallbackData.fromJSON<any>(data);
         switch (callback_data.key) {
           case CallbackDataKey.defiWallets:
             this.defiWalletsService.onDefiWallets(ctx);
             break;
           case CallbackDataKey.templateDefiWallets:
-            this.defiWalletsService.onTemplateDefiWallets(ctx);
+            this.defiWalletsService.onTemplateDefiWallets(
+              ctx,
+              CallbackDataKey.defiWallets,
+              CallbackDataKey.defiWallets,
+            );
             break;
           case CallbackDataKey.importDefiWallets:
-            this.defiWalletsService.onImportDefiWallets(ctx);
+            this.defiWalletsService.onImportDefiWallets(
+              ctx,
+              CallbackDataKey.defiWallets,
+              CallbackDataKey.defiWallets,
+            );
             break;
           case CallbackDataKey.refreshDefiWallets:
             this.defiWalletsService.onRefreshDefiWallets(
@@ -264,6 +272,7 @@ export class BotCallbackService {
               ctx,
               callback_data.params as string,
               CallbackDataKey.selectDefiWallet,
+              CallbackDataKey.defiWallets,
             );
             break;
           case CallbackDataKey.updateDefiWalletOrganization:
@@ -320,12 +329,6 @@ export class BotCallbackService {
               );
             })();
             break;
-          case CallbackDataKey.refreshDefiWallets:
-            this.autoFillService.onRefreshAutoFill(
-              ctx,
-              CallbackDataKey.autoFill,
-            );
-            break;
           default:
             break;
         }
@@ -340,7 +343,7 @@ export class BotCallbackService {
   async onAutoFillCallbackQuery(@Ctx() ctx) {
     try {
       if (ctx.update && ctx.update.callback_query) {
-        const { data, message } = ctx.update.callback_query;
+        const { data } = ctx.update.callback_query;
         const callback_data = CallbackData.fromJSON<any>(data);
         switch (callback_data.key) {
           case CallbackDataKey.autoFill:

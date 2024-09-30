@@ -91,7 +91,7 @@ export class BotMessagesService {
             );
             break;
           case JobAction.updateDefiWallet:
-            status = await this.defiWalletsService.onEnteredUpdateDefiWallet(
+            status = await this.defiWalletsService.onEnteredToUpdateDefiWallet(
               ctx,
               message,
               lastJob,
@@ -113,7 +113,7 @@ export class BotMessagesService {
               ctx,
               message,
               lastJob,
-              CallbackDataKey.web2Logins,
+              CallbackDataKey.selectCredential,
               CallbackDataKey.web2Logins,
             );
             break;

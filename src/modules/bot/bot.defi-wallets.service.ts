@@ -113,7 +113,7 @@ export class BotDefiWalletsService {
         throw new InternalServerErrorException('Can not delete the wallet.');
       }
 
-      await this.onSelectDefiWallet(ctx, defiWalletId, backFrom, backTo);
+      this.onSelectDefiWallet(ctx, defiWalletId, backFrom, backTo);
 
       this.service.shortReply(ctx, `💚 Deleted successfully.`);
     } catch (error) {
@@ -133,7 +133,7 @@ export class BotDefiWalletsService {
     backTo?: CallbackDataKey,
   ) {
     try {
-      await this.onSelectWalletOfDefiWallet(
+      this.onSelectWalletOfDefiWallet(
         ctx,
         defiWalletId,
         walletIndex,
@@ -227,7 +227,7 @@ export class BotDefiWalletsService {
 
       const reply = this.buildSelectWalletOfDefiWalletMessage(wallet);
 
-      await this.helperService.editOrSendMessage(
+      this.helperService.editOrSendMessage(
         ctx,
         reply,
         this.buildSelectWalletOfDefiWalletOptions(
@@ -268,7 +268,7 @@ export class BotDefiWalletsService {
         );
       }
 
-      await this.onDefiWallets(ctx, backFrom, backTo);
+      this.onDefiWallets(ctx, backFrom, backTo);
 
       this.service.shortReply(ctx, `💚 Deleted successfully.`);
     } catch (error) {
@@ -285,7 +285,7 @@ export class BotDefiWalletsService {
     backTo?: CallbackDataKey,
   ) {
     try {
-      await this.onSelectDefiWallet(ctx, defiWalletId, refreshFrom, backTo);
+      this.onSelectDefiWallet(ctx, defiWalletId, refreshFrom, backTo);
 
       this.service.shortReply(ctx, `💚 Refreshed successfully.`);
     } catch (error) {
@@ -297,7 +297,7 @@ export class BotDefiWalletsService {
     }
   }
 
-  public async onEnteredUpdateDefiWallet(
+  public async onEnteredToUpdateDefiWallet(
     @Ctx() ctx: Context,
     @Message() message,
     job: Job,
@@ -321,13 +321,14 @@ export class BotDefiWalletsService {
       }
 
       let error: string;
-      let body: DefiWalletParams = {};
+      let body: DefiWalletParams = { ...defiWallet };
       switch (type) {
         case CallbackDataKey.updateDefiWalletOrganization:
           if (isEmpty(message.text)) {
             error = 'The organization are invalid.';
           } else {
             body = {
+              ...body,
               organization: message.text,
             };
           }
@@ -337,6 +338,7 @@ export class BotDefiWalletsService {
             error = 'The wallet name is invalid.';
           } else {
             body = {
+              ...body,
               wallets: defiWallet.wallets.map(
                 ({ wallet_name, ...rest }, index) => ({
                   ...rest,
@@ -346,6 +348,7 @@ export class BotDefiWalletsService {
               ),
             };
           }
+          break;
         default:
           break;
       }
@@ -410,7 +413,7 @@ export class BotDefiWalletsService {
       const defiWallet = await this.getDefiWallet(ctx, defiWalletId);
 
       if (!defiWallet) {
-        throw new BadRequestException('Defi wallet is not found.');
+        throw new BadRequestException('The defi wallet is not found.');
       }
 
       switch (type) {
@@ -420,7 +423,7 @@ export class BotDefiWalletsService {
               case CallbackDataKey.updateDefiWalletOrganization:
                 return `Reply to this message with your desired organization`;
               case CallbackDataKey.updateWalletNameOfDefiWallet:
-                return `Reply to this message with your desired organization`;
+                return `Reply to this message with your desired wallet name`;
               default:
                 break;
             }
@@ -453,7 +456,7 @@ export class BotDefiWalletsService {
           );
 
           if (!job) {
-            throw new InternalServerErrorException('Cant not create job.');
+            throw new InternalServerErrorException('Cant not create the job.');
           }
           break;
       }
@@ -489,7 +492,7 @@ export class BotDefiWalletsService {
               text: '✏️ Organization',
               callback_data: new CallbackData<string>(
                 CallbackDataKey.updateDefiWalletOrganization,
-                `${defiWallet._id.toString()}`,
+                `${defiWallet._id}`,
               ).toJSON(),
             },
           ],
@@ -498,14 +501,14 @@ export class BotDefiWalletsService {
               text: '🗑 Delete',
               callback_data: new CallbackData<string>(
                 CallbackDataKey.deleteDefiWallet,
-                `${defiWallet._id.toString()}`,
+                `${defiWallet._id}`,
               ).toJSON(),
             },
             {
               text: '🔄 Refresh',
               callback_data: new CallbackData<string>(
                 CallbackDataKey.refreshDefiWallet,
-                `${defiWallet._id.toString()}`,
+                `${defiWallet._id}`,
               ).toJSON(),
             },
           ],
@@ -609,9 +612,7 @@ export class BotDefiWalletsService {
       const isCreated = await this.createDefiWallets(ctx, params);
 
       if (!isCreated) {
-        throw new InternalServerErrorException(
-          'Can not import the defi wallets.',
-        );
+        throw new InternalServerErrorException('Can not import defi wallets.');
       }
 
       const defiWallets = await this.getDefiWallets(ctx);
@@ -635,7 +636,7 @@ export class BotDefiWalletsService {
       this.service.warningReply(ctx, error?.message);
 
       CommonLogger.instance.error(
-        `onEnteredWalletOfDefiWalletName error ${error.message}`,
+        `onImportedDefiWallets error ${error.message}`,
       );
 
       return JobStatus.inProcess;
@@ -679,7 +680,7 @@ export class BotDefiWalletsService {
       CommonLogger.instance.debug(`onImportDefiWallets ${JSON.stringify(job)}`);
 
       if (!job) {
-        throw new InternalServerErrorException('Cant not create job.');
+        throw new InternalServerErrorException('Cant not create the job.');
       }
     } catch (error) {
       this.service.warningReply(ctx, error?.message);
@@ -696,13 +697,13 @@ export class BotDefiWalletsService {
     backTo?: CallbackDataKey,
   ) {
     try {
-      const documentPath = await XLSXUtils.instance.createFile(
+      const source = await XLSXUtils.instance.createFile(
         'defi-wallets-template',
         this._templateHeader,
         this._templateData,
       );
 
-      const caption = this.helperService.buildLinesMessage([
+      const reply = this.helperService.buildLinesMessage([
         `<b>Instruction for Completing the Wallet Form:</b>\n`,
         `- You can fill out as many wallets as you want by adding more "Wallet" columns. Each column represents a separate wallet.\n`,
         `- Format for Wallet Columns:\n`,
@@ -710,13 +711,10 @@ export class BotDefiWalletsService {
         `Ensure each piece of information is separated by a comma, and that the details are complete to avoid issues in accessing the wallets.`,
       ]);
 
-      await this.service.sendDocument(
-        ctx,
-        {
-          source: documentPath,
-        },
-        { caption },
-      );
+      this.service.reply(ctx, reply);
+      await this.service.sendDocument(ctx, {
+        source,
+      });
     } catch (error) {
       this.service.warningReply(ctx, error?.message);
 
@@ -750,14 +748,14 @@ export class BotDefiWalletsService {
           }),
           [
             {
-              text: 'Template',
+              text: 'Download Template',
               callback_data: new CallbackData<CallbackDataKey>(
                 CallbackDataKey.templateDefiWallets,
                 CallbackDataKey.defiWallets,
               ).toJSON(),
             },
             {
-              text: 'Import',
+              text: 'Import Data',
               callback_data: new CallbackData<CallbackDataKey>(
                 CallbackDataKey.importDefiWallets,
                 CallbackDataKey.defiWallets,
