@@ -46,6 +46,9 @@ export class BotPasswordHealthService {
     backTo?: CallbackDataKey,
   ) {
     try {
+      this.service.reply(ctx, 'Coming soon...');
+      return;
+
       if (await this.authService.onEnterAccessToken(ctx)) return;
 
       const { from } = ctx;

@@ -431,4 +431,43 @@ export class BotCallbackService {
       );
     }
   }
+
+  async onPasswordHealthCallbackQuery(@Ctx() ctx) {
+    try {
+      if (ctx.update && ctx.update.callback_query) {
+        const { data } = ctx.update.callback_query;
+        const callback_data = CallbackData.fromJSON<any>(data);
+        switch (callback_data.key) {
+          case CallbackDataKey.passwordHealth:
+            this.passwordHealthService.onPasswordHealth(ctx);
+            break;
+          default:
+            break;
+        }
+      }
+    } catch (error) {
+      CommonLogger.instance.error(
+        `onPasswordHealthCallbackQuery error ${error?.message}`,
+      );
+    }
+  }
+  async onWalletHealthCallbackQuery(@Ctx() ctx) {
+    try {
+      if (ctx.update && ctx.update.callback_query) {
+        const { data } = ctx.update.callback_query;
+        const callback_data = CallbackData.fromJSON<any>(data);
+        switch (callback_data.key) {
+          case CallbackDataKey.passwordHealth:
+            this.walletHealthService.onWalletHealth(ctx);
+            break;
+          default:
+            break;
+        }
+      }
+    } catch (error) {
+      CommonLogger.instance.error(
+        `onWalletHealthCallbackQuery error ${error?.message}`,
+      );
+    }
+  }
 }
