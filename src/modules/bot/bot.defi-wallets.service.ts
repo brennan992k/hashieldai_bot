@@ -32,7 +32,7 @@ import { XLSXUtils } from 'src/common/utils/xlsx';
 import { validator } from 'src/common/utils/validator';
 
 type UpdateDefiWalletJobParams = {
-  deleteMessageId: number;
+  deleteMessageIds: Array<number>;
   editMessageId: number;
   defiWalletId: string;
   type: CallbackDataKey;
@@ -40,7 +40,7 @@ type UpdateDefiWalletJobParams = {
 };
 
 type ImportDefiWalletsJobParams = {
-  deleteMessageId: number;
+  deleteMessageIds: Array<number>;
   editMessageId: number;
 };
 
@@ -307,7 +307,7 @@ export class BotDefiWalletsService {
   ): Promise<JobStatus> {
     const { chat } = ctx;
     try {
-      let { deleteMessageId, editMessageId, defiWalletId, type, walletIndex } =
+      let { deleteMessageIds, editMessageId, defiWalletId, type, walletIndex } =
         JSON.parse(job.params) as UpdateDefiWalletJobParams;
 
       const defiWallet = await this.getDefiWallet(ctx, defiWalletId, sync);
@@ -428,7 +428,7 @@ export class BotDefiWalletsService {
           break;
       }
 
-      this.service.deleteMessage(ctx, chat.id, deleteMessageId);
+      this.service.deleteMessages(ctx, chat.id, deleteMessageIds);
 
       return JobStatus.done;
     } catch (error) {
@@ -488,7 +488,7 @@ export class BotDefiWalletsService {
           });
 
           const params: UpdateDefiWalletJobParams = {
-            deleteMessageId: deleteMessage.message_id,
+            deleteMessageIds: [deleteMessage.message_id],
             editMessageId: editMessage.message_id,
             defiWalletId,
             walletIndex: Number(val),
@@ -655,7 +655,7 @@ export class BotDefiWalletsService {
     try {
       const fileId = message.document.file_id;
 
-      const { deleteMessageId, editMessageId } = JSON.parse(
+      const { deleteMessageIds, editMessageId } = JSON.parse(
         job.params,
       ) as ImportDefiWalletsJobParams;
 
@@ -709,7 +709,7 @@ export class BotDefiWalletsService {
         this.buildDefiWalletsOptions(ctx, defiWallets, backTo),
       );
 
-      this.service.deleteMessage(ctx, chat.id, deleteMessageId);
+      this.service.deleteMessages(ctx, chat.id, deleteMessageIds);
 
       return JobStatus.done;
     } catch (error) {
@@ -745,7 +745,7 @@ export class BotDefiWalletsService {
       );
 
       const params: ImportDefiWalletsJobParams = {
-        deleteMessageId: deleteMessage.message_id,
+        deleteMessageIds: [deleteMessage.message_id],
         editMessageId: editMessage.message_id,
       };
 
@@ -791,8 +791,8 @@ export class BotDefiWalletsService {
         `Ensure each piece of information is separated by a comma, and that the details are complete to avoid issues in accessing the wallets.`,
       ]);
 
-      this.service.reply(ctx, reply);
-      await this.service.sendDocument(ctx, {
+      const message = await this.service.reply(ctx, reply);
+      const message2 = await this.service.sendDocument(ctx, {
         source,
       });
     } catch (error) {

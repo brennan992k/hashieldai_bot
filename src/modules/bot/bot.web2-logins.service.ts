@@ -649,7 +649,7 @@ export class BotWeb2LoginsService {
   ) {
     try {
       const source = await XLSXUtils.instance.createFile(
-        'credentials-template',
+        ' web2-logins-template',
         this._templateHeader,
         this._templateData,
       );

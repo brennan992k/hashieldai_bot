@@ -25,12 +25,7 @@ import { CommonCache } from 'src/common/cache';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Job } from './schemas/job.schema';
-import {
-  isDateString,
-  isEmpty,
-  isNumberString,
-  isString,
-} from 'class-validator';
+import { isEmpty, isNumberString, isString } from 'class-validator';
 import { validator } from 'src/common/utils/validator';
 
 type UpdateProfileJobParams = {

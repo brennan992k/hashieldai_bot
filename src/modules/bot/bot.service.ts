@@ -183,6 +183,23 @@ export class BotService {
     }
   }
 
+  public async deleteMessages(
+    @Ctx() ctx: Context,
+    chatId: number,
+    messageIds: Array<number>,
+  ) {
+    try {
+      if (!chatId || messageIds.length < 1) return;
+      return await Promise.all(
+        messageIds.map((messageId) => ctx.tg.deleteMessage(chatId, messageId)),
+      );
+    } catch (error) {
+      // CommonLogger.instance.error(
+      //   `deleteMessages error ${this._extractErrorMessage(error)}`,
+      // );
+    }
+  }
+
   protected _extractErrorMessage(error): string {
     let errorMessage = '⚠️ ';
     if (
