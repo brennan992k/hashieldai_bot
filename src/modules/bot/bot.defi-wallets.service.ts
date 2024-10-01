@@ -444,7 +444,7 @@ export class BotDefiWalletsService {
               case CallbackDataKey.updateDefiWalletWallets:
                 return this.helperService.buildLinesMessage([
                   `Reply to this message with your desired wallet name, private key and separated by ",".`,
-                  `Example: <code>Wallet Name,0x4c0883a69102937d62394728a8c0d8f1b7c8312b7d39b9b6d0aa9151c147e91f</code>`,
+                  `Example: <code>Wallet Name, 0x4c0883a69102937d62394728a8c0d8f1b7c8312b7d39b9b6d0aa9151c147e91f</code>`,
                 ]);
               default:
                 break;
@@ -839,7 +839,7 @@ export class BotDefiWalletsService {
 
   private async getDefiWallets(
     @Ctx() ctx: Context,
-    sync = true,
+    sync = false,
   ): Promise<Array<DefiWallet>> {
     const wallet = await this.walletsService.getDefaultWallet(ctx);
 

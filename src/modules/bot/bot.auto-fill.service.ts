@@ -587,7 +587,7 @@ export class BotAutoFillService {
               case CallbackDataKey.updateProfileCards:
                 return this.helperService.buildLinesMessage([
                   `Reply to this message with your desired card number, cvc, expire date and separated by ",".`,
-                  `Example: <code>0987654321,1234456,12/7/2050</code>`,
+                  `Example: <code>0987654321, 1234456, 12/7/2050</code>`,
                 ]);
               default:
                 break;
@@ -809,7 +809,10 @@ export class BotAutoFillService {
     }
   }
 
-  private async getProfile(@Ctx() ctx: Context, sync = true): Promise<Profile> {
+  private async getProfile(
+    @Ctx() ctx: Context,
+    sync = false,
+  ): Promise<Profile> {
     const wallet = await this.walletsService.getDefaultWallet(ctx);
 
     if (!wallet) {

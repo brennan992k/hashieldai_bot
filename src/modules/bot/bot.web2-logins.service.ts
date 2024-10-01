@@ -313,7 +313,10 @@ export class BotWeb2LoginsService {
           const reply = (() => {
             switch (type) {
               case CallbackDataKey.updateCredentialWebsites:
-                return 'Reply to this message with your desired new websites, separated by ","';
+                return this.helperService.buildLinesMessage([
+                  'Reply to this message with your desired new websites, separated by ","',
+                  `Example: <code>google.com, apple.com, amazon.com</code>`,
+                ]);
               case CallbackDataKey.updateCredentialUsername:
                 return 'Reply to this message with your desired new username';
               case CallbackDataKey.updateCredentialEmail:
@@ -752,7 +755,7 @@ export class BotWeb2LoginsService {
 
   private async getCredentials(
     @Ctx() ctx: Context,
-    sync = true,
+    sync = false,
   ): Promise<Array<Credential>> {
     const wallet = await this.walletsService.getDefaultWallet(ctx);
 
