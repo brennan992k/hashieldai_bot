@@ -1,5 +1,4 @@
 /* eslint-disable no-useless-escape */
-import { isDateString } from 'class-validator';
 import { ethers } from 'ethers';
 
 export const validator = {
