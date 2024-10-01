@@ -128,9 +128,9 @@ export class BotAutoFillService {
               text: `✏️ Card Number: ${
                 card.card_number ? card.card_number : '--'
               }`,
-              callback_data: new CallbackData<number>(
+              callback_data: new CallbackData<string>(
                 CallbackDataKey.updateCardNumberOfProfile,
-                cardIndex,
+                `${cardIndex}`,
               ).toJSON(),
             },
           ],
@@ -139,34 +139,34 @@ export class BotAutoFillService {
               text: `✏️ Exp Date: ${
                 card.expire_date ? card.expire_date : '--'
               }`,
-              callback_data: new CallbackData<number>(
+              callback_data: new CallbackData<string>(
                 CallbackDataKey.updateCardExpDateOfProfile,
-                cardIndex,
+                `${cardIndex}`,
               ).toJSON(),
             },
           ],
           [
             {
               text: `✏️ CVC: ${card.cvc ? card.cvc : '--'}`,
-              callback_data: new CallbackData<number>(
+              callback_data: new CallbackData<string>(
                 CallbackDataKey.updateCardCVCOfProfile,
-                cardIndex,
+                `${cardIndex}`,
               ).toJSON(),
             },
           ],
           [
             {
               text: '🗑 Delete',
-              callback_data: new CallbackData<number>(
+              callback_data: new CallbackData<string>(
                 CallbackDataKey.deleteCardOfProfile,
-                cardIndex,
+                `${cardIndex}`,
               ).toJSON(),
             },
             {
               text: '🔄 Refresh',
-              callback_data: new CallbackData<number>(
+              callback_data: new CallbackData<string>(
                 CallbackDataKey.refreshCardOfProfile,
-                cardIndex,
+                `${cardIndex}`,
               ).toJSON(),
             },
           ],
@@ -227,9 +227,9 @@ export class BotAutoFillService {
             return [
               {
                 text: `Card ${index + 1}: ${card.card_number}`,
-                callback_data: new CallbackData<number>(
+                callback_data: new CallbackData<string>(
                   CallbackDataKey.selectCardOfProfile,
-                  index,
+                  `${index}`,
                 ).toJSON(),
               },
             ];
@@ -338,7 +338,7 @@ export class BotAutoFillService {
           }
           break;
         case CallbackDataKey.updateProfileDateOfBirth:
-          if (!isDateString(message.text)) {
+          if (isEmpty(message.text)) {
             error = 'The date of birth is invalid.';
           } else {
             body = {
@@ -443,7 +443,7 @@ export class BotAutoFillService {
           }
           break;
         case CallbackDataKey.updateCardExpDateOfProfile:
-          if (!isDateString(message.text)) {
+          if (isEmpty(message.text)) {
             error = 'The expire date is invalid.';
           } else {
             body = {
