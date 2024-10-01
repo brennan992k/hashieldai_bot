@@ -31,6 +31,7 @@ import {
   isNumberString,
   isString,
 } from 'class-validator';
+import { validator } from 'src/common/utils/validator';
 
 type UpdateProfileJobParams = {
   deleteMessageId: number;
@@ -357,7 +358,7 @@ export class BotAutoFillService {
           }
           break;
         case CallbackDataKey.updateProfileDateOfBirth:
-          if (isEmpty(message.text)) {
+          if (!validator.isDateOfBirth(message.text)) {
             error = 'The date of birth is invalid.';
           } else {
             body = {
@@ -428,7 +429,7 @@ export class BotAutoFillService {
           if (
             !isNumberString(card_number) ||
             isEmpty(cvc) ||
-            isEmpty(expire_date)
+            !validator.isExpireDate(expire_date)
           ) {
             error = 'The card is invalid.';
           } else {
@@ -614,7 +615,10 @@ export class BotAutoFillService {
               case CallbackDataKey.updateProfileLastName:
                 return `Reply to this message with your desired last name`;
               case CallbackDataKey.updateProfileDateOfBirth:
-                return `Reply to this message with your desired date of birth`;
+                return this.helperService.buildLinesMessage([
+                  `Reply to this message with your desired date of birth with format: dd/mm/yyyy`,
+                  `Example: <code>12/09/2000</code>`,
+                ]);
               case CallbackDataKey.updateProfileCity:
                 return `Reply to this message with your desired city`;
               case CallbackDataKey.updateProfileState:
@@ -626,7 +630,10 @@ export class BotAutoFillService {
               case CallbackDataKey.updateCardNumberOfProfile:
                 return `Reply to this message with your desired card number`;
               case CallbackDataKey.updateCardExpDateOfProfile:
-                return `Reply to this message with your desired expire date`;
+                return this.helperService.buildLinesMessage([
+                  `Reply to this message with your desired expire date with format: dd/mm`,
+                  `Example: <code>12/09</code>`,
+                ]);
               case CallbackDataKey.updateCardCVCOfProfile:
                 return `Reply to this message with your desired CVC`;
               case CallbackDataKey.updateProfileCards:

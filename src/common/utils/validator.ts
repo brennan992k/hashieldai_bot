@@ -1,4 +1,5 @@
 /* eslint-disable no-useless-escape */
+import { isDateString } from 'class-validator';
 import { ethers } from 'ethers';
 
 export const validator = {
@@ -20,12 +21,67 @@ export const validator = {
     const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     return regex.test(email);
   },
-  isWalletPrivateKey(privateKey: string) {
+  isWalletPrivateKey: (privateKey: string): boolean => {
     try {
       const wallet = new ethers.Wallet(privateKey);
       return wallet.privateKey.slice(2, wallet.privateKey.length) == privateKey;
     } catch (error) {
       return false;
     }
+  },
+  isExpireDate: (expireDate: string): boolean => {
+    const pattern = /^(0[1-9]|1[0-2])\/(\d{2})$/;
+
+    if (!pattern.test(expireDate)) {
+      return false;
+    }
+
+    // Extract month and year from the valid format
+    const parts = expireDate.split('/');
+    const month = parseInt(parts[0], 10);
+    const year = parseInt(parts[1], 10);
+
+    // Get the current date
+    const now = new Date();
+    const currentYear = now.getFullYear() % 100; // Get last two digits of current year
+    const currentMonth = now.getMonth() + 1; // Months are zero-indexed in JavaScript
+
+    // Validate the expiration date
+    return (
+      year > currentYear || (year === currentYear && month >= currentMonth)
+    );
+  },
+  isDateOfBirth: (dateString: string): boolean => {
+    // Define the regex pattern for DD/MM/YYYY
+    const pattern = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/;
+
+    // Check if the dateString matches the pattern
+    if (!pattern.test(dateString)) {
+      return false;
+    }
+
+    // Split the date string into components
+    const parts = dateString.split('/');
+    const day = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10);
+    const year = parseInt(parts[2], 10);
+
+    // Create a Date object from the input
+    const birthDate = new Date(year, month - 1, day); // Month is 0-indexed in JavaScript
+
+    // Check if the date is valid
+    if (
+      birthDate.getFullYear() !== year ||
+      birthDate.getMonth() !== month - 1 ||
+      birthDate.getDate() !== day
+    ) {
+      return false;
+    }
+
+    // Get the current date
+    const now = new Date();
+
+    // Check if the birthDate is in the future
+    return birthDate <= now;
   },
 };
