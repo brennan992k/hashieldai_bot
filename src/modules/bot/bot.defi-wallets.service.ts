@@ -791,8 +791,8 @@ export class BotDefiWalletsService {
         `Ensure each piece of information is separated by a comma, and that the details are complete to avoid issues in accessing the wallets.`,
       ]);
 
-      const message = await this.service.reply(ctx, reply);
-      const message2 = await this.service.sendDocument(ctx, {
+      this.service.reply(ctx, reply);
+      this.service.sendDocument(ctx, {
         source,
       });
     } catch (error) {
