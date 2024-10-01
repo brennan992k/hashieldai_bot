@@ -349,6 +349,16 @@ export class BotDefiWalletsService {
             };
           }
           break;
+        case CallbackDataKey.updateDefiWalletSeedPhrase:
+          if (isEmpty(message.text)) {
+            error = 'The seed phrase is invalid.';
+          } else {
+            body = {
+              ...body,
+              seed_phrase: message.text,
+            };
+          }
+          break;
         case CallbackDataKey.updateWalletNameOfDefiWallet:
           if (isEmpty(message.text)) {
             error = 'The wallet name is invalid.';
@@ -538,9 +548,18 @@ export class BotDefiWalletsService {
           ],
           [
             {
-              text: '✏️ Organization',
+              text: `✏️ Organization: ${defiWallet.organization}`,
               callback_data: new CallbackData<string>(
                 CallbackDataKey.updateDefiWalletOrganization,
+                `${defiWallet._id}`,
+              ).toJSON(),
+            },
+          ],
+          [
+            {
+              text: `✏️ Seed Phrase: ${defiWallet.seed_phrase}`,
+              callback_data: new CallbackData<string>(
+                CallbackDataKey.updateDefiWalletSeedPhrase,
                 `${defiWallet._id}`,
               ).toJSON(),
             },
