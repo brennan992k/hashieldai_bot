@@ -402,6 +402,30 @@ export class BotAutoFillService {
             };
           }
           break;
+        case CallbackDataKey.updateProfileCards:
+          const [card_number, cvc, expire_date] = message.text
+            .split(',')
+            .map((_) => _?.trim());
+          if (
+            !isNumberString(card_number) ||
+            isEmpty(cvc) ||
+            isEmpty(expire_date)
+          ) {
+            error = 'The card is invalid.';
+          } else {
+            body = {
+              ...body,
+              cards: [
+                ...profile.cards,
+                {
+                  card_number,
+                  cvc,
+                  expire_date,
+                },
+              ],
+            };
+          }
+          break;
         case CallbackDataKey.updateCardNumberOfProfile:
           if (!isNumberString(message.text)) {
             error = 'The card number is invalid.';
@@ -560,6 +584,11 @@ export class BotAutoFillService {
                 return `Reply to this message with your desired expire date`;
               case CallbackDataKey.updateCardCVCOfProfile:
                 return `Reply to this message with your desired CVC`;
+              case CallbackDataKey.updateProfileCards:
+                return this.helperService.buildLinesMessage([
+                  `Reply to this message with your desired card number, cvc, expire date and separated by ",".`,
+                  `Example: <code>0987654321,1234456,12/7/2050</code>`,
+                ]);
               default:
                 break;
             }

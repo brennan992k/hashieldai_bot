@@ -282,6 +282,7 @@ export class BotCallbackService {
             break;
           case CallbackDataKey.updateDefiWalletOrganization:
           case CallbackDataKey.updateWalletNameOfDefiWallet:
+          case CallbackDataKey.updateDefiWalletWallets:
             (() => {
               const [defiWalletId, val] = callback_data.params.split('_');
               this.defiWalletsService.onUpdateDefiWallet(
@@ -367,6 +368,7 @@ export class BotCallbackService {
           case CallbackDataKey.updateProfilePostcode:
           case CallbackDataKey.updateProfileState:
           case CallbackDataKey.updateProfileGender:
+          case CallbackDataKey.updateProfileCards:
           case CallbackDataKey.updateCardNumberOfProfile:
           case CallbackDataKey.updateCardCVCOfProfile:
           case CallbackDataKey.updateCardExpDateOfProfile:

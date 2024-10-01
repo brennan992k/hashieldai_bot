@@ -318,6 +318,28 @@ export class BotDefiWalletsService {
       let error: string;
       let body: DefiWalletParams = { ...defiWallet };
       switch (type) {
+        case CallbackDataKey.updateDefiWalletWallets:
+          const [wallet_name, private_key] = message.text
+            .split(',')
+            .map((_) => _?.trim());
+          if (
+            isEmpty(wallet_name) ||
+            !validator.isWalletPrivateKey(private_key)
+          ) {
+            error = 'The wallet is invalid.';
+          } else {
+            body = {
+              ...body,
+              wallets: [
+                ...defiWallet.wallets,
+                {
+                  wallet_name,
+                  private_key,
+                },
+              ],
+            };
+          }
+          break;
         case CallbackDataKey.updateDefiWalletOrganization:
           if (isEmpty(message.text)) {
             error = 'The organization are invalid.';
@@ -419,6 +441,11 @@ export class BotDefiWalletsService {
                 return `Reply to this message with your desired organization`;
               case CallbackDataKey.updateWalletNameOfDefiWallet:
                 return `Reply to this message with your desired wallet name`;
+              case CallbackDataKey.updateDefiWalletWallets:
+                return this.helperService.buildLinesMessage([
+                  `Reply to this message with your desired wallet name, private key and separated by ",".`,
+                  `Example: <code>Wallet Name,0x4c0883a69102937d62394728a8c0d8f1b7c8312b7d39b9b6d0aa9151c147e91f</code>`,
+                ]);
               default:
                 break;
             }
@@ -600,10 +627,12 @@ export class BotDefiWalletsService {
                 list: Array<{ wallet_name: string; private_key: string }>,
                 item,
               ) => {
-                const [wallet_name, private_key] = itemD[item].split(',');
+                const [wallet_name, private_key] = itemD[item]
+                  .split(',')
+                  .map((_) => _?.trim());
                 list.push({
                   wallet_name,
-                  private_key: private_key?.trim(),
+                  private_key,
                 });
                 return list;
               },
