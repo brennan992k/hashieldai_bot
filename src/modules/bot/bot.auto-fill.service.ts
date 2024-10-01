@@ -426,6 +426,11 @@ export class BotAutoFillService {
           const [card_number, cvc, expire_date] = message.text
             .split(',')
             .map((_) => _?.trim());
+          console.log(
+            !isNumberString(card_number),
+            isEmpty(cvc),
+            !validator.isExpireDate(expire_date),
+          );
           if (
             !isNumberString(card_number) ||
             isEmpty(cvc) ||
@@ -631,15 +636,15 @@ export class BotAutoFillService {
                 return `Reply to this message with your desired card number`;
               case CallbackDataKey.updateCardExpDateOfProfile:
                 return this.helperService.buildLinesMessage([
-                  `Reply to this message with your desired expire date with format: dd/mm`,
-                  `Example: <code>12/09</code>`,
+                  `Reply to this message with your desired expire date with format: mm/yy`,
+                  `Example: <code>09/25</code>`,
                 ]);
               case CallbackDataKey.updateCardCVCOfProfile:
                 return `Reply to this message with your desired CVC`;
               case CallbackDataKey.updateProfileCards:
                 return this.helperService.buildLinesMessage([
                   `Reply to this message with your desired card number, cvc, expire date and separated by ",".`,
-                  `Example: <code>0987654321, 1234456, 12/09</code>`,
+                  `Example: <code>0987654321, 1234456, 09/25</code>`,
                 ]);
               default:
                 break;
