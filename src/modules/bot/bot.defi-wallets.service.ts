@@ -1,3 +1,4 @@
+/* eslint-disable prefer-const */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   BadRequestException,
@@ -301,13 +302,8 @@ export class BotDefiWalletsService {
   ): Promise<JobStatus> {
     const { chat } = ctx;
     try {
-      const {
-        deleteMessageId,
-        editMessageId,
-        defiWalletId,
-        type,
-        walletIndex,
-      } = JSON.parse(job.params) as UpdateDefiWalletJobParams;
+      let { deleteMessageId, editMessageId, defiWalletId, type, walletIndex } =
+        JSON.parse(job.params) as UpdateDefiWalletJobParams;
 
       const defiWallet = await this.getDefiWallet(ctx, defiWalletId);
 
@@ -382,22 +378,40 @@ export class BotDefiWalletsService {
         );
       }
 
-      const newDefiWallet = { ...defiWallet, ...body };
-      const reply = this.helperService.buildLinesMessage([
-        `<b>👝 Defi Wallets - ${newDefiWallet.organization}</b>`,
-      ]);
+      const newDefiWallet = { ...defiWallet, ...body } as DefiWallet;
 
-      await this.service.editMessage(
-        ctx,
-        chat.id,
-        editMessageId,
-        reply,
-        this.buildSelectDefiWalletOptions(
-          ctx,
-          newDefiWallet as DefiWallet,
-          backTo,
-        ),
-      );
+      switch (type) {
+        case CallbackDataKey.updateWalletNameOfDefiWallet:
+        case CallbackDataKey.updateDefiWalletWallets:
+          if (CallbackDataKey.updateDefiWalletWallets) {
+            walletIndex = newDefiWallet.wallets.length - 1;
+          }
+          const wallet = newDefiWallet.wallets[walletIndex];
+          this.service.editMessage(
+            ctx,
+            chat.id,
+            editMessageId,
+            this.buildSelectWalletOfDefiWalletMessage(wallet),
+            this.buildSelectWalletOfDefiWalletOptions(
+              ctx,
+              newDefiWallet,
+              walletIndex,
+              CallbackDataKey.selectDefiWallet,
+            ),
+          );
+          break;
+        default:
+          await this.service.editMessage(
+            ctx,
+            chat.id,
+            editMessageId,
+            this.helperService.buildLinesMessage([
+              `<b>👝 Defi Wallets - ${newDefiWallet.organization}</b>`,
+            ]),
+            this.buildSelectDefiWalletOptions(ctx, newDefiWallet, backTo),
+          );
+          break;
+      }
 
       this.service.deleteMessage(ctx, chat.id, deleteMessageId);
 

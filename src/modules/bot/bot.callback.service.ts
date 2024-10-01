@@ -390,6 +390,13 @@ export class BotCallbackService {
               CallbackDataKey.autoFill,
             );
             break;
+          case CallbackDataKey.refreshProfileCards:
+            this.autoFillService.onRefreshProfileCards(
+              ctx,
+              CallbackDataKey.profileCards,
+              CallbackDataKey.autoFill,
+            );
+            break;
           case CallbackDataKey.selectCardOfProfile:
             (() => {
               const [cardIndex] = callback_data.params.split('_');

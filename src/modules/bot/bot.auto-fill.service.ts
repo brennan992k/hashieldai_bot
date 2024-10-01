@@ -1,3 +1,4 @@
+/* eslint-disable prefer-const */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   BadRequestException,
@@ -214,6 +215,24 @@ export class BotAutoFillService {
     }
   }
 
+  public async onRefreshProfileCards(
+    @Ctx() ctx: Context,
+    refreshFrom: CallbackDataKey,
+    backTo?: CallbackDataKey,
+  ) {
+    try {
+      this.onProfileCards(ctx, refreshFrom, backTo);
+
+      this.service.shortReply(ctx, `💚 Refreshed successfully.`);
+    } catch (error) {
+      this.service.warningReply(ctx, error?.message);
+
+      CommonLogger.instance.error(
+        `onRefreshProfileCards error ${error?.message}`,
+      );
+    }
+  }
+
   public buildProfileCardsOptions(
     @Ctx() ctx: Context,
     profile: Profile,
@@ -247,8 +266,8 @@ export class BotAutoFillService {
             {
               text: '🔄 Refresh',
               callback_data: new CallbackData<CallbackDataKey>(
-                CallbackDataKey.refreshAutoFill,
-                CallbackDataKey.refreshAutoFill,
+                CallbackDataKey.refreshProfileCards,
+                CallbackDataKey.refreshProfileCards,
               ).toJSON(),
             },
           ],
@@ -294,7 +313,7 @@ export class BotAutoFillService {
   ): Promise<JobStatus> {
     const { chat } = ctx;
     try {
-      const { deleteMessageId, editMessageId, type, cardIndex } = JSON.parse(
+      let { deleteMessageId, editMessageId, type, cardIndex } = JSON.parse(
         job.params,
       ) as UpdateProfileJobParams;
 
@@ -307,8 +326,6 @@ export class BotAutoFillService {
       let error: string;
       let body: ProfileParams = {
         ...profile,
-        profile: { ...profile.profile },
-        cards: profile.cards.map(() => ({})),
       };
       switch (type) {
         case CallbackDataKey.updateProfileFirstName:
@@ -489,17 +506,42 @@ export class BotAutoFillService {
       }
 
       const newProfile = { ...profile, ...body } as Profile;
-      const reply = this.helperService.buildLinesMessage([
-        `<b>📝 Auto Fill</b>`,
-      ]);
 
-      this.service.editMessage(
-        ctx,
-        chat.id,
-        editMessageId,
-        reply,
-        this.buildProfileOptions(ctx, newProfile, backTo),
-      );
+      switch (type) {
+        case CallbackDataKey.updateCardNumberOfProfile:
+        case CallbackDataKey.updateCardExpDateOfProfile:
+        case CallbackDataKey.updateCardCVCOfProfile:
+        case CallbackDataKey.updateProfileCards:
+          if (CallbackDataKey.updateProfileCards) {
+            cardIndex = newProfile.cards.length - 1;
+          }
+
+          const card = newProfile.cards[cardIndex];
+          this.service.editMessage(
+            ctx,
+            chat.id,
+            editMessageId,
+            this.helperService.buildLinesMessage([
+              `<b>📝 Auto Fill - Card ${card.card_number}</b>`,
+            ]),
+            this.buildSelectCardOfProfileOptions(
+              ctx,
+              newProfile,
+              cardIndex,
+              CallbackDataKey.profileCards,
+            ),
+          );
+          break;
+        default:
+          this.service.editMessage(
+            ctx,
+            chat.id,
+            editMessageId,
+            this.helperService.buildLinesMessage([`<b>📝 Auto Fill</b>`]),
+            this.buildProfileOptions(ctx, newProfile, backTo),
+          );
+          break;
+      }
 
       this.service.deleteMessage(ctx, chat.id, deleteMessageId);
 
