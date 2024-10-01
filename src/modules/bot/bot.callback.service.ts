@@ -58,6 +58,8 @@ export class BotCallbackService {
             this.onWeb2LoginCallbackQuery(ctx);
             this.onDefiWalletCallbackQuery(ctx);
             this.onAutoFillCallbackQuery(ctx);
+            this.onPasswordHealthCallbackQuery(ctx);
+            this.onWalletHealthCallbackQuery(ctx);
             break;
         }
       }
