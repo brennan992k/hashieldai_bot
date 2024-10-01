@@ -379,7 +379,7 @@ export class BotWeb2LoginsService {
         inline_keyboard: [
           [
             {
-              text: `✏️ Websites: ${info.url}`,
+              text: `✏️ Websites: ${info.url ? info.url : '--'}`,
               callback_data: new CallbackData<string>(
                 CallbackDataKey.updateCredentialWebsites,
                 `${credential._id}`,

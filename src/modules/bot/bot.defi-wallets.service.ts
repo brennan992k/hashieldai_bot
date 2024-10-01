@@ -529,7 +529,9 @@ export class BotDefiWalletsService {
           ...defiWallet.wallets.map((wallet, index) => {
             return [
               {
-                text: `Wallet ${index + 1}: ${wallet.wallet_name}`,
+                text: `Wallet ${index + 1}: ${
+                  wallet.wallet_name ? wallet.wallet_name : '--'
+                }`,
                 callback_data: new CallbackData<string>(
                   CallbackDataKey.selectWalletOfDefiWallet,
                   `${defiWallet._id}_${index}`,
@@ -548,7 +550,9 @@ export class BotDefiWalletsService {
           ],
           [
             {
-              text: `✏️ Organization: ${defiWallet.organization}`,
+              text: `✏️ Organization: ${
+                defiWallet.organization ? defiWallet.organization : '--'
+              }`,
               callback_data: new CallbackData<string>(
                 CallbackDataKey.updateDefiWalletOrganization,
                 `${defiWallet._id}`,
@@ -557,7 +561,9 @@ export class BotDefiWalletsService {
           ],
           [
             {
-              text: `✏️ Seed Phrase: ${defiWallet.seed_phrase}`,
+              text: `✏️ Seed Phrase: ${
+                defiWallet.seed_phrase ? defiWallet.seed_phrase : '--'
+              }`,
               callback_data: new CallbackData<string>(
                 CallbackDataKey.updateDefiWalletSeedPhrase,
                 `${defiWallet._id}`,
@@ -809,7 +815,7 @@ export class BotDefiWalletsService {
             return [
               {
                 text: `${defiWallet.isProtect ? '🔒' : '🔗'} Organization: ${
-                  defiWallet.organization
+                  defiWallet.organization ? defiWallet.organization : '--'
                 }`,
                 callback_data: new CallbackData<string>(
                   CallbackDataKey.selectDefiWallet,
