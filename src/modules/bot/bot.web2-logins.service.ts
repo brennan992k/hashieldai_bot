@@ -714,7 +714,7 @@ export class BotWeb2LoginsService {
           ],
           [
             {
-              text: 'Refresh',
+              text: '🔄 Refresh',
               callback_data: new CallbackData<CallbackDataKey>(
                 CallbackDataKey.refreshWeb2Logins,
                 CallbackDataKey.web2Logins,

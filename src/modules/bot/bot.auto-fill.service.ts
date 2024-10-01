@@ -721,7 +721,7 @@ export class BotAutoFillService {
         label: 'Others',
       },
     ];
-    const { profile: profileDetail } = profile;
+    const { profile: profileDetail, cards } = profile;
     return {
       parse_mode: 'HTML',
       reply_markup: {
@@ -817,7 +817,7 @@ export class BotAutoFillService {
           ],
           [
             {
-              text: `Cards`,
+              text: `🗃 Cards: ${cards.length} Card`,
               callback_data: new CallbackData<CallbackDataKey>(
                 CallbackDataKey.profileCards,
                 CallbackDataKey.autoFill,
@@ -826,7 +826,7 @@ export class BotAutoFillService {
           ],
           [
             {
-              text: 'Refresh',
+              text: '🔄 Refresh',
               callback_data: new CallbackData<CallbackDataKey>(
                 CallbackDataKey.refreshAutoFill,
                 CallbackDataKey.autoFill,

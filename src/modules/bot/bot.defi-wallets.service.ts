@@ -842,7 +842,7 @@ export class BotDefiWalletsService {
           ],
           [
             {
-              text: 'Refresh',
+              text: '🔄 Refresh',
               callback_data: new CallbackData<CallbackDataKey>(
                 CallbackDataKey.refreshDefiWallets,
                 CallbackDataKey.defiWallets,
