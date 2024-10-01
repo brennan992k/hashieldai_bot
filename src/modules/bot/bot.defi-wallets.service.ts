@@ -92,9 +92,10 @@ export class BotDefiWalletsService {
     walletIndex: number,
     backFrom: CallbackDataKey,
     backTo?: CallbackDataKey,
+    sync = false,
   ) {
     try {
-      const defiWallet = await this.getDefiWallet(ctx, defiWalletId);
+      const defiWallet = await this.getDefiWallet(ctx, defiWalletId, sync);
 
       if (!defiWallet) {
         throw new BadRequestException('The defi wallet is not found.');
@@ -248,9 +249,10 @@ export class BotDefiWalletsService {
     defiWalletId: string,
     backFrom: CallbackDataKey,
     backTo?: CallbackDataKey,
+    sync = false,
   ) {
     try {
-      const defiWallet = await this.getDefiWallet(ctx, defiWalletId);
+      const defiWallet = await this.getDefiWallet(ctx, defiWalletId, sync);
 
       if (!defiWallet) {
         throw new BadRequestException('The defi wallet is not found.');
@@ -299,13 +301,14 @@ export class BotDefiWalletsService {
     job: Job,
     backFrom?: CallbackDataKey,
     backTo?: CallbackDataKey,
+    sync = false,
   ): Promise<JobStatus> {
     const { chat } = ctx;
     try {
       let { deleteMessageId, editMessageId, defiWalletId, type, walletIndex } =
         JSON.parse(job.params) as UpdateDefiWalletJobParams;
 
-      const defiWallet = await this.getDefiWallet(ctx, defiWalletId);
+      const defiWallet = await this.getDefiWallet(ctx, defiWalletId, sync);
 
       if (!defiWallet) {
         throw new BadRequestException('The defi wallet is not found.');
@@ -436,12 +439,13 @@ export class BotDefiWalletsService {
     val?: string | number,
     backFrom?: CallbackDataKey,
     backTo?: CallbackDataKey,
+    sync = false,
   ) {
     try {
       const { from, update } = ctx;
       const { message: editMessage } = update.callback_query;
 
-      const defiWallet = await this.getDefiWallet(ctx, defiWalletId);
+      const defiWallet = await this.getDefiWallet(ctx, defiWalletId, sync);
 
       if (!defiWallet) {
         throw new BadRequestException('The defi wallet is not found.');
@@ -568,9 +572,10 @@ export class BotDefiWalletsService {
     defiWalletId: string,
     backFrom?: CallbackDataKey,
     backTo?: CallbackDataKey,
+    sync = false,
   ) {
     try {
-      const defiWallet = await this.getDefiWallet(ctx, defiWalletId);
+      const defiWallet = await this.getDefiWallet(ctx, defiWalletId, sync);
 
       if (!defiWallet) {
         throw new BadRequestException('The defi wallet is not found.');
@@ -617,6 +622,7 @@ export class BotDefiWalletsService {
     job: Job,
     backFrom?: CallbackDataKey,
     backTo?: CallbackDataKey,
+    sync = true,
   ): Promise<JobStatus> {
     const { chat } = ctx;
     try {
@@ -662,7 +668,7 @@ export class BotDefiWalletsService {
         throw new InternalServerErrorException('Can not import defi wallets.');
       }
 
-      const defiWallets = await this.getDefiWallets(ctx);
+      const defiWallets = await this.getDefiWallets(ctx, sync);
 
       const reply = this.helperService.buildLinesMessage([
         `<b>👝 Defi Wallets</b>`,
@@ -828,11 +834,12 @@ export class BotDefiWalletsService {
     @Ctx() ctx: Context,
     backFrom?: CallbackDataKey,
     backTo?: CallbackDataKey,
+    sync = false,
   ) {
     try {
       if (await this.authService.onEnterAccessToken(ctx)) return;
 
-      const defiWallets = await this.getDefiWallets(ctx);
+      const defiWallets = await this.getDefiWallets(ctx, sync);
 
       const reply = this.helperService.buildLinesMessage([
         `<b>👝 Defi Wallets</b>`,
@@ -921,8 +928,9 @@ export class BotDefiWalletsService {
   private async getDefiWallet(
     @Ctx() ctx: Context,
     defiWalletId: string,
+    sync = false,
   ): Promise<DefiWallet> {
-    const defiwallets = await this.getDefiWallets(ctx);
+    const defiwallets = await this.getDefiWallets(ctx, sync);
 
     return defiwallets.find(({ _id }) => _id == defiWalletId);
   }

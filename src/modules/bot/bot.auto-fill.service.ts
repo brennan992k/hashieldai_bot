@@ -281,11 +281,12 @@ export class BotAutoFillService {
     @Ctx() ctx: Context,
     backFrom?: CallbackDataKey,
     backTo?: CallbackDataKey,
+    sync = false,
   ) {
     try {
       if (await this.authService.onEnterAccessToken(ctx)) return;
 
-      const profile = await this.getProfile(ctx);
+      const profile = await this.getProfile(ctx, sync);
 
       const reply = this.helperService.buildLinesMessage([
         `<b>📝 Auto Fill - Cards</b>`,
@@ -310,6 +311,7 @@ export class BotAutoFillService {
     job: Job,
     backFrom?: CallbackDataKey,
     backTo?: CallbackDataKey,
+    sync = false,
   ): Promise<JobStatus> {
     const { chat } = ctx;
     try {
@@ -317,7 +319,7 @@ export class BotAutoFillService {
         job.params,
       ) as UpdateProfileJobParams;
 
-      const profile = await this.getProfile(ctx);
+      const profile = await this.getProfile(ctx, sync);
 
       if (!profile) {
         throw new BadRequestException('The profile is not found.');
@@ -565,12 +567,13 @@ export class BotAutoFillService {
     val?: string | number,
     backFrom?: CallbackDataKey,
     backTo?: CallbackDataKey,
+    sync = false,
   ) {
     try {
       const { from, update } = ctx;
       const { message: editMessage } = update.callback_query;
 
-      const profile = await this.getProfile(ctx);
+      const profile = await this.getProfile(ctx, sync);
 
       if (!profile) {
         throw new BadRequestException('The profile is not found.');
@@ -828,11 +831,12 @@ export class BotAutoFillService {
     @Ctx() ctx: Context,
     backFrom?: CallbackDataKey,
     backTo?: CallbackDataKey,
+    sync = false,
   ) {
     try {
       if (await this.authService.onEnterAccessToken(ctx)) return;
 
-      const profile = await this.getProfile(ctx);
+      const profile = await this.getProfile(ctx, sync);
 
       const reply = this.helperService.buildLinesMessage([
         `<b>📝 Auto Fill</b>`,

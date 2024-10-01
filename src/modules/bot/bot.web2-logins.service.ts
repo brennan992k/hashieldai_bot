@@ -522,6 +522,7 @@ export class BotWeb2LoginsService {
     job: Job,
     backFrom?: CallbackDataKey,
     backTo?: CallbackDataKey,
+    sync = true,
   ): Promise<JobStatus> {
     const { chat } = ctx;
     try {
@@ -564,7 +565,7 @@ export class BotWeb2LoginsService {
         throw new InternalServerErrorException('Can not import credentials.');
       }
 
-      const credentials = await this.getCredentials(ctx);
+      const credentials = await this.getCredentials(ctx, sync);
 
       const reply = this.helperService.buildLinesMessage([
         `<b>💳 Web2 Logins</b>`,
@@ -730,11 +731,12 @@ export class BotWeb2LoginsService {
     @Ctx() ctx: Context,
     backFrom?: CallbackDataKey,
     backTo?: CallbackDataKey,
+    sync = false,
   ) {
     try {
       if (await this.authService.onEnterAccessToken(ctx)) return;
 
-      const credentials = await this.getCredentials(ctx);
+      const credentials = await this.getCredentials(ctx, sync);
 
       const reply = this.helperService.buildLinesMessage([
         `<b>💳 Web2 Logins</b>`,
@@ -809,8 +811,9 @@ export class BotWeb2LoginsService {
   private async getCredential(
     @Ctx() ctx: Context,
     credentialId: string,
+    sync = false,
   ): Promise<Credential> {
-    const credentials = await this.getCredentials(ctx);
+    const credentials = await this.getCredentials(ctx, sync);
 
     return credentials.find(({ _id }) => _id == credentialId);
   }
