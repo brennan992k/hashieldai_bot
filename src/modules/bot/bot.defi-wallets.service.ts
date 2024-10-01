@@ -136,6 +136,7 @@ export class BotDefiWalletsService {
         walletIndex,
         refreshFrom,
         backTo,
+        true,
       );
 
       this.service.shortReply(ctx, `💚 Refreshed successfully.`);
@@ -208,9 +209,10 @@ export class BotDefiWalletsService {
     walletIndex: number,
     backFrom: CallbackDataKey,
     backTo?: CallbackDataKey,
+    sync = false,
   ) {
     try {
-      const defiWallet = await this.getDefiWallet(ctx, defiWalletId);
+      const defiWallet = await this.getDefiWallet(ctx, defiWalletId, sync);
 
       if (!defiWallet) {
         throw new BadRequestException('The defi wallet is not found.');
@@ -283,7 +285,7 @@ export class BotDefiWalletsService {
     backTo?: CallbackDataKey,
   ) {
     try {
-      this.onSelectDefiWallet(ctx, defiWalletId, refreshFrom, backTo);
+      this.onSelectDefiWallet(ctx, defiWalletId, refreshFrom, backTo, true);
 
       this.service.shortReply(ctx, `💚 Refreshed successfully.`);
     } catch (error) {
@@ -629,7 +631,7 @@ export class BotDefiWalletsService {
     backTo?: CallbackDataKey,
   ) {
     try {
-      this.onDefiWallets(ctx, refreshFrom, backTo);
+      this.onDefiWallets(ctx, refreshFrom, backTo, true);
 
       this.service.shortReply(ctx, `💚 Refreshed successfully.`);
     } catch (error) {

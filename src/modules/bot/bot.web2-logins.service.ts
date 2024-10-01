@@ -132,7 +132,7 @@ export class BotWeb2LoginsService {
     backTo?: CallbackDataKey,
   ) {
     try {
-      this.onSelectCredential(ctx, credentialId, refreshFrom, backTo);
+      this.onSelectCredential(ctx, credentialId, refreshFrom, backTo, true);
 
       this.service.shortReply(ctx, `💚 Refreshed successfully.`);
     } catch (error) {
@@ -471,9 +471,10 @@ export class BotWeb2LoginsService {
     credentialId: string,
     backFrom?: CallbackDataKey,
     backTo?: CallbackDataKey,
+    sync = false,
   ) {
     try {
-      const credential = await this.getCredential(ctx, credentialId);
+      const credential = await this.getCredential(ctx, credentialId, sync);
 
       if (!credential) {
         throw new BadRequestException('The credential is not found.');
@@ -504,7 +505,7 @@ export class BotWeb2LoginsService {
     backTo?: CallbackDataKey,
   ) {
     try {
-      this.onWeb2Logins(ctx, refreshFrom, backTo);
+      this.onWeb2Logins(ctx, refreshFrom, backTo, true);
 
       this.service.shortReply(ctx, `💚 Refreshed successfully.`);
     } catch (error) {

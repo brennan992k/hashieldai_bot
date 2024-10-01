@@ -695,7 +695,11 @@ export class BotWalletsService {
 
       await this.helperService.editOrSendMessage(
         ctx,
-        `<b>💰Wallets - You have ${wallets.length} wallets</b>`,
+        `<b>💰Wallets - You have ${
+          wallets.length < 2
+            ? `${wallets.length} wallet`
+            : `${wallets.length} wallets`
+        }</b>`,
         this.buildWalletsOptions(ctx, wallets, balances, backTo),
         backFrom,
       );

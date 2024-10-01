@@ -101,7 +101,7 @@ export class BotAutoFillService {
     backTo?: CallbackDataKey,
   ) {
     try {
-      this.onSelectCardOfProfile(ctx, cardIndex, refreshFrom, backTo);
+      this.onSelectCardOfProfile(ctx, cardIndex, refreshFrom, backTo, true);
 
       this.service.shortReply(ctx, `💚 Refreshed successfully.`);
     } catch (error) {
@@ -183,9 +183,10 @@ export class BotAutoFillService {
     cardIndex: number,
     backFrom: CallbackDataKey,
     backTo?: CallbackDataKey,
+    sync = false,
   ) {
     try {
-      const profile = await this.getProfile(ctx);
+      const profile = await this.getProfile(ctx, sync);
 
       if (!profile) {
         throw new BadRequestException('The profile is not found.');
@@ -222,7 +223,7 @@ export class BotAutoFillService {
     backTo?: CallbackDataKey,
   ) {
     try {
-      this.onProfileCards(ctx, refreshFrom, backTo);
+      this.onProfileCards(ctx, refreshFrom, backTo, true);
 
       this.service.shortReply(ctx, `💚 Refreshed successfully.`);
     } catch (error) {
@@ -290,7 +291,11 @@ export class BotAutoFillService {
       const profile = await this.getProfile(ctx, sync);
 
       const reply = this.helperService.buildLinesMessage([
-        `<b>📝 Auto Fill - Cards</b>`,
+        `<b>📝 Auto Fill - You have ${
+          profile.cards.length < 2
+            ? `${profile.cards.length} Card`
+            : `${profile.cards.length} Cards`
+        }</b>`,
       ]);
 
       this.helperService.editOrSendMessage(
@@ -692,7 +697,7 @@ export class BotAutoFillService {
     backTo?: CallbackDataKey,
   ) {
     try {
-      this.onAutoFill(ctx, refreshFrom, backTo);
+      this.onAutoFill(ctx, refreshFrom, backTo, true);
 
       this.service.shortReply(ctx, `💚 Refreshed successfully.`);
     } catch (error) {
@@ -817,7 +822,11 @@ export class BotAutoFillService {
           ],
           [
             {
-              text: `🗃 Cards: ${cards.length} Card`,
+              text: `🗃 Cards: ${
+                cards.length < 2
+                  ? `${cards.length} Card`
+                  : `${cards.length} Cards`
+              }`,
               callback_data: new CallbackData<CallbackDataKey>(
                 CallbackDataKey.profileCards,
                 CallbackDataKey.autoFill,
