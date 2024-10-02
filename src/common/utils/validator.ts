@@ -83,4 +83,41 @@ export const validator = {
     // Check if the birthDate is in the future
     return birthDate <= now;
   },
+  isEnum: (value: any, enumObj: object): boolean => {
+    return Object.values(enumObj).includes(value);
+  },
+  isEmpty: (value: any): boolean => {
+    // Check for undefined or null
+    if (value == null) {
+      // this checks both null and undefined
+      return true;
+    }
+
+    // Check for empty string
+    if (typeof value === 'string') {
+      return value.length === 0;
+    }
+
+    // Check for empty array
+    if (Array.isArray(value)) {
+      return value.length === 0;
+    }
+
+    // Check for empty object
+    if (typeof value === 'object') {
+      return Object.keys(value).length === 0;
+    }
+
+    // Check for NaN
+    if (typeof value === 'number' && isNaN(value)) {
+      return true; // Treat NaN as "empty"
+    }
+
+    // If none of the above conditions are met, it is not considered empty
+    return false;
+  },
+  isNumberString: (value: string): boolean => {
+    // Check if the string is not empty and can be converted to a number
+    return value.trim() !== '' && !isNaN(Number(value));
+  },
 };

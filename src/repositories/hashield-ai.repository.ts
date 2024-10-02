@@ -2,7 +2,6 @@ import { Web3Address } from 'src/app.type';
 import { BaseRepository } from './base.repository';
 import * as CryptoJS from 'crypto-js';
 import { isUndefined } from 'util';
-import { isEmpty, isEnum, isNumberString } from 'class-validator';
 import {
   BadRequestException,
   InternalServerErrorException,
@@ -196,19 +195,22 @@ export class HashieldAIRepository extends BaseRepository {
         throw new BadRequestException('The websites are invalid.');
       }
 
-      if (isEmpty(item.email) && isEmpty(item.username)) {
+      if (validator.isEmpty(item.email) && validator.isEmpty(item.username)) {
         throw new BadRequestException('The email or the username is required.');
       }
 
-      if (!isEmpty(item.email) && !validator.isEmail(item.email)) {
+      if (!validator.isEmpty(item.email) && !validator.isEmail(item.email)) {
         throw new BadRequestException('The email is invalid.');
       }
 
-      if (!isEmpty(item.username) && !validator.isUsername(item.username)) {
+      if (
+        !validator.isEmpty(item.username) &&
+        !validator.isUsername(item.username)
+      ) {
         throw new BadRequestException('The username is invalid.');
       }
 
-      if (isEmpty(item.password)) {
+      if (validator.isEmpty(item.password)) {
         throw new BadRequestException('The password is invalid.');
       }
     });
@@ -251,7 +253,7 @@ export class HashieldAIRepository extends BaseRepository {
       throw new BadRequestException('The email is invalid.');
     }
 
-    if (!isUndefined(params.password) && isEmpty(params.password)) {
+    if (!isUndefined(params.password) && validator.isEmpty(params.password)) {
       throw new BadRequestException('The password is invalid.');
     }
 
@@ -317,18 +319,19 @@ export class HashieldAIRepository extends BaseRepository {
     params: Array<DefiWalletParams>,
   ): Promise<boolean> {
     params.forEach((item) => {
-      if (isEmpty(item.organization)) {
+      if (validator.isEmpty(item.organization)) {
         throw new BadRequestException('The organization is invalid.');
       }
 
-      if (isEmpty(item.seed_phrase)) {
+      if (validator.isEmpty(item.seed_phrase)) {
         throw new BadRequestException('The seed phrase is invalid.');
       }
 
       if (
         item.wallets.some(
           ({ wallet_name, private_key }) =>
-            isEmpty(wallet_name) || !validator.isWalletPrivateKey(private_key),
+            validator.isEmpty(wallet_name) ||
+            !validator.isWalletPrivateKey(private_key),
         )
       ) {
         throw new BadRequestException('The wallets are invalid.');
@@ -353,11 +356,17 @@ export class HashieldAIRepository extends BaseRepository {
     defiWalletId: string,
     params: DefiWalletParams,
   ): Promise<boolean> {
-    if (!isUndefined(params.organization) && isEmpty(params.organization)) {
+    if (
+      !isUndefined(params.organization) &&
+      validator.isEmpty(params.organization)
+    ) {
       throw new BadRequestException('The organization is invalid.');
     }
 
-    if (!isUndefined(params.seed_phrase) && isEmpty(params.seed_phrase)) {
+    if (
+      !isUndefined(params.seed_phrase) &&
+      validator.isEmpty(params.seed_phrase)
+    ) {
       throw new BadRequestException('The seed phrase is invalid.');
     }
 
@@ -365,7 +374,8 @@ export class HashieldAIRepository extends BaseRepository {
       !isUndefined(params.wallets) &&
       params.wallets.some(
         ({ wallet_name, private_key }) =>
-          isEmpty(wallet_name) || !validator.isWalletPrivateKey(private_key),
+          validator.isEmpty(wallet_name) ||
+          !validator.isWalletPrivateKey(private_key),
       )
     ) {
       throw new BadRequestException('The wallets are invalid.');
@@ -473,14 +483,14 @@ export class HashieldAIRepository extends BaseRepository {
   ): Promise<boolean> {
     if (
       !isUndefined(params.profile.first_name) &&
-      isEmpty(params.profile.first_name)
+      validator.isEmpty(params.profile.first_name)
     ) {
       throw new BadRequestException('The first name is invalid.');
     }
 
     if (
       !isUndefined(params.profile.last_name) &&
-      isEmpty(params.profile.last_name)
+      validator.isEmpty(params.profile.last_name)
     ) {
       throw new BadRequestException('The last name is invalid.');
     }
@@ -492,24 +502,30 @@ export class HashieldAIRepository extends BaseRepository {
       throw new BadRequestException('The date of birth is invalid.');
     }
 
-    if (!isUndefined(params.profile.city) && isEmpty(params.profile.city)) {
+    if (
+      !isUndefined(params.profile.city) &&
+      validator.isEmpty(params.profile.city)
+    ) {
       throw new BadRequestException('The city is invalid.');
     }
 
-    if (!isUndefined(params.profile.state) && isEmpty(params.profile.state)) {
+    if (
+      !isUndefined(params.profile.state) &&
+      validator.isEmpty(params.profile.state)
+    ) {
       throw new BadRequestException('The state is invalid.');
     }
 
     if (
       !isUndefined(params.profile.post_code) &&
-      !isNumberString(params.profile.post_code)
+      !validator.isNumberString(params.profile.post_code)
     ) {
       throw new BadRequestException('The postcode is invalid.');
     }
 
     if (
       !isUndefined(params.profile.gender) &&
-      !isEnum(params.profile.gender, Gender)
+      !validator.isEnum(params.profile.gender, Gender)
     ) {
       throw new BadRequestException('The gender is invalid.');
     }
@@ -519,8 +535,8 @@ export class HashieldAIRepository extends BaseRepository {
       params.cards.some(
         ({ expire_date, cvc, card_number }) =>
           !validator.isExpireDate(expire_date) ||
-          isEmpty(cvc) ||
-          !isNumberString(card_number),
+          validator.isEmpty(cvc) ||
+          !validator.isNumberString(card_number),
       )
     ) {
       throw new BadRequestException('The cards are invalid.');
