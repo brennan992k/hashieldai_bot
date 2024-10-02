@@ -2,33 +2,39 @@
 import { ethers } from 'ethers';
 
 export const validator = {
-  isURL: (url: string): boolean => {
+  isURL: (url?: string): boolean => {
+    if (!url) return false;
     const regex =
       /^(https?:\/\/)?([\w\-]+\.)+[\w\-]+(\/[\w\-\.~:?#@!$&'()*+,;=\[\\\]\/%]*)*$/i;
     return regex.test(url);
   },
-  isDomain: (domain: string): boolean => {
+  isDomain: (domain?: string): boolean => {
+    if (!domain) return false;
     const regex = /^(?!-)[A-Za-z0-9-]{1,63}(?<!-)(\.[A-Za-z]{2,})+$/;
     return regex.test(domain);
   },
-  isUsername: (username: string): boolean => {
+  isUsername: (username?: string): boolean => {
+    if (!username) return false;
     // Regular expression for valid username
     const regex = /^(?![_.])(?!.*[_.]{2})[A-Za-z0-9._]+(?<![._])$/;
     return regex.test(username);
   },
-  isEmail(email: string): boolean {
+  isEmail(email?: string): boolean {
+    if (!email) return false;
     const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     return regex.test(email);
   },
-  isWalletPrivateKey: (privateKey: string): boolean => {
+  isWalletPrivateKey: (privateKey?: string): boolean => {
     try {
+      if (!privateKey) return false;
       const wallet = new ethers.Wallet(privateKey);
       return wallet.privateKey.slice(2, wallet.privateKey.length) == privateKey;
     } catch (error) {
       return false;
     }
   },
-  isExpireDate: (expireDate: string): boolean => {
+  isExpireDate: (expireDate?: string): boolean => {
+    if (!expireDate) return false;
     const pattern = /^(0[1-9]|1[0-2])\/(\d{2})$/;
 
     if (!pattern.test(expireDate)) {
@@ -50,7 +56,8 @@ export const validator = {
       year > currentYear || (year === currentYear && month >= currentMonth)
     );
   },
-  isDateOfBirth: (dateString: string): boolean => {
+  isDateOfBirth: (dateString?: string): boolean => {
+    if (!dateString) return false;
     // Define the regex pattern for DD/MM/YYYY
     const pattern = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/;
 
@@ -116,7 +123,8 @@ export const validator = {
     // If none of the above conditions are met, it is not considered empty
     return false;
   },
-  isNumberString: (value: string): boolean => {
+  isNumberString: (value?: string): boolean => {
+    if (!value) return false;
     // Check if the string is not empty and can be converted to a number
     return value.trim() !== '' && !isNaN(Number(value));
   },
