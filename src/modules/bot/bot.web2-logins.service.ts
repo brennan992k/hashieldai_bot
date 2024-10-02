@@ -166,7 +166,9 @@ export class BotWeb2LoginsService {
       let body: CredentialParams = { ...credential };
       switch (type) {
         case CallbackDataKey.updateCredentialWebsites:
-          const websites = message.text.split(',').map((_) => _?.trim());
+          const websites = Array.from<string>(
+            new Set(message.text.split(',').map((_) => _?.trim())),
+          );
           const isInValid = websites.some(
             (website) =>
               !validator.isURL(website) && !validator.isDomain(website),
@@ -542,7 +544,9 @@ export class BotWeb2LoginsService {
                 itemD[itemH.title] !== undefined ? itemD[itemH.title] : '';
               switch (itemH.key) {
                 case 'websites':
-                  obj['url'] = obj[itemH.key].split(',').map((_) => _?.trim());
+                  obj['url'] = Array.from<string>(
+                    new Set(obj[itemH.key].split(',').map((_) => _?.trim())),
+                  );
                   break;
                 case 'autoLogin':
                 case 'autoFill':
