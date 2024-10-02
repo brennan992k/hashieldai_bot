@@ -60,7 +60,7 @@ export class BotAboutService {
 
       const reply = this.helperService.buildLinesMessage([
         `<b>ℹ️ About HashieldAI</b>\n`,
-        'Harmonizing account abstraction with privacy trading solutions.\n',
+        'Harmonizing account abstraction with privacy trading solutions. => Control your access. Secure your passwords. Defend your data.\n',
         ...this._socials.map(
           (item, index) =>
             `<b>${item.title}</b>: <a href="${item.link}">${item.link}</a>`,

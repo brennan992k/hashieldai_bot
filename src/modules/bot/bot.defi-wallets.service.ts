@@ -749,13 +749,39 @@ export class BotDefiWalletsService {
         editMessageId: editMessage.message_id,
       };
 
-      const job = await this.jobModel.create({
-        telegramUserId: from.id,
-        action: JobAction.importDefiWallets,
-        status: JobStatus.inProcess,
-        params: JSON.stringify(params),
-        timestamp: new Date().getTime(),
-      });
+      let job = await this.jobModel
+        .findOne({
+          telegramUserId: from.id,
+          action: JobAction.importDefiWallets,
+          status: JobStatus.inProcess,
+        })
+        .sort({ timestamp: -1 })
+        .exec();
+
+      if (job) {
+        this.jobModel
+          .updateOne(
+            { _id: job._id },
+            {
+              params: JSON.stringify({
+                ...params,
+                deleteMessageIds: [
+                  ...params.deleteMessageIds,
+                  ...JSON.parse(job.params).deleteMessageIds,
+                ],
+              }),
+            },
+          )
+          .exec();
+      } else {
+        const job = await this.jobModel.create({
+          telegramUserId: from.id,
+          action: JobAction.importDefiWallets,
+          status: JobStatus.inProcess,
+          params: JSON.stringify(params),
+          timestamp: new Date().getTime(),
+        });
+      }
 
       CommonLogger.instance.debug(`onImportDefiWallets ${JSON.stringify(job)}`);
 
@@ -777,6 +803,9 @@ export class BotDefiWalletsService {
     backTo?: CallbackDataKey,
   ) {
     try {
+      const { from, update } = ctx;
+      const { message: editMessage } = update.callback_query;
+
       const source = await XLSXUtils.instance.createFile(
         'defi-wallets-template',
         this._templateHeader,
@@ -791,10 +820,33 @@ export class BotDefiWalletsService {
         `Ensure each piece of information is separated by a comma, and that the details are complete to avoid issues in accessing the wallets.`,
       ]);
 
-      this.service.reply(ctx, reply);
-      this.service.sendDocument(ctx, {
-        source,
+      const deleteMessages = await Promise.all([
+        this.service.reply(ctx, reply),
+        this.service.sendDocument(ctx, {
+          source,
+        }),
+      ]);
+
+      const params: ImportDefiWalletsJobParams = {
+        deleteMessageIds: deleteMessages.map(({ message_id }) => message_id),
+        editMessageId: editMessage.message_id,
+      };
+
+      const job = await this.jobModel.create({
+        telegramUserId: from.id,
+        action: JobAction.importDefiWallets,
+        status: JobStatus.inProcess,
+        params: JSON.stringify(params),
+        timestamp: new Date().getTime(),
       });
+
+      CommonLogger.instance.debug(
+        `onTemplateDefiWallets ${JSON.stringify(job)}`,
+      );
+
+      if (!job) {
+        throw new InternalServerErrorException('Cant not create the job.');
+      }
     } catch (error) {
       this.service.warningReply(ctx, error?.message);
 

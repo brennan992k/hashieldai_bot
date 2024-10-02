@@ -29,12 +29,12 @@ import { isEmpty } from 'class-validator';
 import { validator } from 'src/common/utils/validator';
 
 type ImportCredentialsJobParams = {
-  deleteMessageId: number;
+  deleteMessageIds: Array<number>;
   editMessageId: number;
 };
 
 type UpdateCredentialJobParams = {
-  deleteMessageId: number;
+  deleteMessageIds: Array<number>;
   editMessageId: number;
   credentialId: string;
   type: CallbackDataKey;
@@ -153,9 +153,8 @@ export class BotWeb2LoginsService {
   ): Promise<JobStatus> {
     const { chat } = ctx;
     try {
-      const { deleteMessageId, editMessageId, credentialId, type } = JSON.parse(
-        job.params,
-      ) as UpdateCredentialJobParams;
+      const { deleteMessageIds, editMessageId, credentialId, type } =
+        JSON.parse(job.params) as UpdateCredentialJobParams;
 
       const credential = await this.getCredential(ctx, credentialId);
 
@@ -242,7 +241,7 @@ export class BotWeb2LoginsService {
         this.buildSelectCredentialOptions(ctx, newCredential, backTo),
       );
 
-      this.service.deleteMessage(ctx, chat.id, deleteMessageId);
+      this.service.deleteMessages(ctx, chat.id, deleteMessageIds);
 
       return JobStatus.done;
     } catch (error) {
@@ -335,7 +334,7 @@ export class BotWeb2LoginsService {
           });
 
           const params: UpdateCredentialJobParams = {
-            deleteMessageId: deleteMessage.message_id,
+            deleteMessageIds: [deleteMessage.message_id],
             editMessageId: editMessage.message_id,
             credentialId,
             type,
@@ -529,7 +528,7 @@ export class BotWeb2LoginsService {
     try {
       const fileId = message.document.file_id;
 
-      const { deleteMessageId, editMessageId } = JSON.parse(
+      const { deleteMessageIds, editMessageId } = JSON.parse(
         job.params,
       ) as ImportCredentialsJobParams;
 
@@ -580,7 +579,7 @@ export class BotWeb2LoginsService {
         this.buildCredentialsOptions(ctx, credentials, backTo),
       );
 
-      this.service.deleteMessage(ctx, chat.id, deleteMessageId);
+      this.service.deleteMessages(ctx, chat.id, deleteMessageIds);
 
       return JobStatus.done;
     } catch (error) {
@@ -616,22 +615,50 @@ export class BotWeb2LoginsService {
       );
 
       const params: ImportCredentialsJobParams = {
-        deleteMessageId: deleteMessage.message_id,
+        deleteMessageIds: [deleteMessage.message_id],
         editMessageId: editMessage.message_id,
       };
 
-      const job = await this.jobModel.create({
-        telegramUserId: from.id,
-        action: JobAction.importCredentials,
-        status: JobStatus.inProcess,
-        params: JSON.stringify(params),
-        timestamp: new Date().getTime(),
-      });
+      let job = await this.jobModel
+        .findOne({
+          telegramUserId: from.id,
+          action: JobAction.importCredentials,
+          status: JobStatus.inProcess,
+        })
+        .sort({ timestamp: -1 })
+        .exec();
 
-      CommonLogger.instance.debug(`onImportCredentials ${JSON.stringify(job)}`);
+      if (job) {
+        this.jobModel
+          .updateOne(
+            { _id: job._id },
+            {
+              params: JSON.stringify({
+                ...params,
+                deleteMessageIds: [
+                  ...params.deleteMessageIds,
+                  ...JSON.parse(job.params).deleteMessageIds,
+                ],
+              }),
+            },
+          )
+          .exec();
+      } else {
+        job = await this.jobModel.create({
+          telegramUserId: from.id,
+          action: JobAction.importCredentials,
+          status: JobStatus.inProcess,
+          params: JSON.stringify(params),
+          timestamp: new Date().getTime(),
+        });
 
-      if (!job) {
-        throw new InternalServerErrorException('Cant not create the job.');
+        CommonLogger.instance.debug(
+          `onImportCredentials ${JSON.stringify(job)}`,
+        );
+
+        if (!job) {
+          throw new InternalServerErrorException('Cant not create the job.');
+        }
       }
     } catch (error) {
       this.service.warningReply(ctx, error?.message);
@@ -648,6 +675,9 @@ export class BotWeb2LoginsService {
     backTo?: CallbackDataKey,
   ) {
     try {
+      const { from, update } = ctx;
+      const { message: editMessage } = update.callback_query;
+
       const source = await XLSXUtils.instance.createFile(
         ' web2-logins-template',
         this._templateHeader,
@@ -663,10 +693,33 @@ export class BotWeb2LoginsService {
         `<b>Please ensure all required fields are filled out accurately to facilitate seamless usage of your saved credentials.</b>`,
       ]);
 
-      this.service.reply(ctx, reply);
-      this.service.sendDocument(ctx, {
-        source,
+      const deleteMessages = await Promise.all([
+        this.service.reply(ctx, reply),
+        this.service.sendDocument(ctx, {
+          source,
+        }),
+      ]);
+
+      const params: ImportCredentialsJobParams = {
+        deleteMessageIds: deleteMessages.map(({ message_id }) => message_id),
+        editMessageId: editMessage.message_id,
+      };
+
+      const job = await this.jobModel.create({
+        telegramUserId: from.id,
+        action: JobAction.importCredentials,
+        status: JobStatus.inProcess,
+        params: JSON.stringify(params),
+        timestamp: new Date().getTime(),
       });
+
+      CommonLogger.instance.debug(
+        `onTemplateCredentials ${JSON.stringify(job)}`,
+      );
+
+      if (!job) {
+        throw new InternalServerErrorException('Cant not create the job.');
+      }
     } catch (error) {
       this.service.warningReply(ctx, error?.message);
 
