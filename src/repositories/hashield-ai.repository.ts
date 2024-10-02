@@ -187,6 +187,7 @@ export class HashieldAIRepository extends BaseRepository {
   ): Promise<boolean> {
     params.forEach((item) => {
       if (
+        !item.url ||
         item.url.some(
           (website) =>
             !(validator.isDomain(website) || validator.isURL(website)),
@@ -328,6 +329,7 @@ export class HashieldAIRepository extends BaseRepository {
       }
 
       if (
+        !item.wallets ||
         item.wallets.some(
           ({ wallet_name, private_key }) =>
             validator.isEmpty(wallet_name) ||
@@ -482,49 +484,49 @@ export class HashieldAIRepository extends BaseRepository {
     params: ProfileParams,
   ): Promise<boolean> {
     if (
-      !isUndefined(params.profile.first_name) &&
+      !isUndefined(params.profile?.first_name) &&
       validator.isEmpty(params.profile.first_name)
     ) {
       throw new BadRequestException('The first name is invalid.');
     }
 
     if (
-      !isUndefined(params.profile.last_name) &&
+      !isUndefined(params.profile?.last_name) &&
       validator.isEmpty(params.profile.last_name)
     ) {
       throw new BadRequestException('The last name is invalid.');
     }
 
     if (
-      !isUndefined(params.profile.birthday) &&
+      !isUndefined(params.profile?.birthday) &&
       !validator.isDateOfBirth(params.profile.birthday)
     ) {
       throw new BadRequestException('The date of birth is invalid.');
     }
 
     if (
-      !isUndefined(params.profile.city) &&
+      !isUndefined(params.profile?.city) &&
       validator.isEmpty(params.profile.city)
     ) {
       throw new BadRequestException('The city is invalid.');
     }
 
     if (
-      !isUndefined(params.profile.state) &&
+      !isUndefined(params.profile?.state) &&
       validator.isEmpty(params.profile.state)
     ) {
       throw new BadRequestException('The state is invalid.');
     }
 
     if (
-      !isUndefined(params.profile.post_code) &&
+      !isUndefined(params.profile?.post_code) &&
       !validator.isNumberString(params.profile.post_code)
     ) {
       throw new BadRequestException('The postcode is invalid.');
     }
 
     if (
-      !isUndefined(params.profile.gender) &&
+      !isUndefined(params.profile?.gender) &&
       !validator.isEnum(params.profile.gender, Gender)
     ) {
       throw new BadRequestException('The gender is invalid.');
