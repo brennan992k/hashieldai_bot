@@ -75,7 +75,7 @@ export class BotWeb2LoginsService {
     {
       websites: 'example.com,example.ca',
       email: 'example@gmail.com',
-      username: '@username',
+      username: 'username',
       password: '@123456789##',
       autoLogin: 0,
       autoFill: 0,
@@ -85,7 +85,7 @@ export class BotWeb2LoginsService {
     {
       websites: 'example2.com,example.ca',
       email: 'example2@gmail.com',
-      username: '@username2',
+      username: 'username2',
       password: '@123456789##',
       autoLogin: 0,
       autoFill: 1,
