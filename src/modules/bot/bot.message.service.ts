@@ -87,7 +87,6 @@ export class BotMessagesService {
               message,
               lastJob,
               CallbackDataKey.defiWallets,
-              CallbackDataKey.defiWallets,
             );
             break;
           case JobAction.updateDefiWallet:
@@ -104,7 +103,6 @@ export class BotMessagesService {
               ctx,
               message,
               lastJob,
-              CallbackDataKey.web2Logins,
               CallbackDataKey.web2Logins,
             );
             break;
