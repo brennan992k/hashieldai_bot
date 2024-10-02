@@ -251,7 +251,7 @@ export class HashieldAIRepository extends BaseRepository {
       !isUndefined(params.username) &&
       !validator.isUsername(params.username)
     ) {
-      throw new BadRequestException('The email is invalid.');
+      throw new BadRequestException('The username is invalid.');
     }
 
     if (!isUndefined(params.password) && validator.isEmpty(params.password)) {
