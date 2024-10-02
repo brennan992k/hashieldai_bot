@@ -1,6 +1,13 @@
 import { Web3Address } from 'src/app.type';
 import { BaseRepository } from './base.repository';
 import * as CryptoJS from 'crypto-js';
+import { isUndefined } from 'util';
+import { isEmpty, isEnum, isNumberString } from 'class-validator';
+import {
+  BadRequestException,
+  InternalServerErrorException,
+} from '@nestjs/common';
+import { validator } from 'src/common/utils/validator';
 
 export enum Gender {
   male = 'male',
@@ -166,7 +173,7 @@ export class HashieldAIRepository extends BaseRepository {
     });
 
     if (!response) {
-      throw new Error('Can not get credentials.');
+      throw new InternalServerErrorException('Can not get credentials.');
     }
 
     return response.map(({ password, ...rest }) => ({
@@ -179,18 +186,41 @@ export class HashieldAIRepository extends BaseRepository {
     owner: Web3Address,
     params: Array<CredentialParams>,
   ): Promise<boolean> {
-    const response: Credential = await this.post(
-      'web2/upload',
-      params.map((item) => ({ ...item })),
-      {
-        headers: {
-          api_key: this.encryptData(owner),
-        },
+    params.forEach((item) => {
+      if (
+        item.url.some(
+          (website) =>
+            !(validator.isDomain(website) || validator.isURL(website)),
+        )
+      ) {
+        throw new BadRequestException('The websites are invalid.');
+      }
+
+      if (isEmpty(item.email) && isEmpty(item.username)) {
+        throw new BadRequestException('The email or the username is required.');
+      }
+
+      if (!isEmpty(item.email) && !validator.isEmail(item.email)) {
+        throw new BadRequestException('The email is invalid.');
+      }
+
+      if (!isEmpty(item.username) && !validator.isUsername(item.username)) {
+        throw new BadRequestException('The username is invalid.');
+      }
+
+      if (isEmpty(item.password)) {
+        throw new BadRequestException('The password is invalid.');
+      }
+    });
+
+    const response: Credential = await this.post('web2/upload', params, {
+      headers: {
+        api_key: this.encryptData(owner),
       },
-    );
+    });
 
     if (!response) {
-      throw new Error('Can not create credentials.');
+      throw new InternalServerErrorException('Can not create credentials.');
     }
 
     return true;
@@ -201,6 +231,30 @@ export class HashieldAIRepository extends BaseRepository {
     credentialId: string,
     params: CredentialParams,
   ): Promise<boolean> {
+    if (
+      !isUndefined(params.url) &&
+      params.url.some(
+        (website) => !(validator.isDomain(website) || validator.isURL(website)),
+      )
+    ) {
+      throw new BadRequestException('The websites are invalid.');
+    }
+
+    if (!isUndefined(params.email) && !validator.isEmail(params.email)) {
+      throw new BadRequestException('The email is invalid.');
+    }
+
+    if (
+      !isUndefined(params.username) &&
+      !validator.isUsername(params.username)
+    ) {
+      throw new BadRequestException('The email is invalid.');
+    }
+
+    if (!isUndefined(params.password) && isEmpty(params.password)) {
+      throw new BadRequestException('The password is invalid.');
+    }
+
     const response: { data: Array<Credential> } = await this.patch(
       'web2',
       {
@@ -214,7 +268,7 @@ export class HashieldAIRepository extends BaseRepository {
       },
     );
     if (!response) {
-      throw new Error('Can not update credential.');
+      throw new InternalServerErrorException('Can not update credential.');
     }
 
     return true;
@@ -232,7 +286,7 @@ export class HashieldAIRepository extends BaseRepository {
     });
 
     if (!response) {
-      throw new Error('Can not delete credentials.');
+      throw new InternalServerErrorException('Can not delete credentials.');
     }
 
     return true;
@@ -246,7 +300,7 @@ export class HashieldAIRepository extends BaseRepository {
     });
 
     if (!response) {
-      throw new Error('Can not update defi wallets');
+      throw new InternalServerErrorException('Can not delete the defi wallet');
     }
 
     return response.map(({ wallets, ...rest }) => ({
@@ -258,43 +312,37 @@ export class HashieldAIRepository extends BaseRepository {
     }));
   }
 
-  public async createDefiWallet(
-    owner: Web3Address,
-    params: DefiWalletParams,
-  ): Promise<boolean> {
-    const response = await this.post(
-      'defi',
-      { ...params },
-      {
-        headers: {
-          api_key: this.encryptData(owner),
-        },
-      },
-    );
-
-    if (!response) {
-      throw new Error('Can not create defi wallet.');
-    }
-
-    return true;
-  }
-
   public async createDefiWallets(
     owner: Web3Address,
     params: Array<DefiWalletParams>,
   ): Promise<boolean> {
-    const response = await this.post(
-      'defi/upload',
-      params.map((item) => ({ ...item })),
-      {
-        headers: {
-          api_key: this.encryptData(owner),
-        },
+    params.forEach((item) => {
+      if (isEmpty(item.organization)) {
+        throw new BadRequestException('The organization is invalid.');
+      }
+
+      if (isEmpty(item.seed_phrase)) {
+        throw new BadRequestException('The seed phrase is invalid.');
+      }
+
+      if (
+        item.wallets.some(
+          ({ wallet_name, private_key }) =>
+            isEmpty(wallet_name) || !validator.isWalletPrivateKey(private_key),
+        )
+      ) {
+        throw new BadRequestException('The wallets are invalid.');
+      }
+    });
+
+    const response = await this.post('defi/upload', params, {
+      headers: {
+        api_key: this.encryptData(owner),
       },
-    );
+    });
 
     if (!response) {
-      throw new Error('Can not create defi wallets.');
+      throw new InternalServerErrorException('Can not create defi wallets.');
     }
 
     return true;
@@ -305,6 +353,24 @@ export class HashieldAIRepository extends BaseRepository {
     defiWalletId: string,
     params: DefiWalletParams,
   ): Promise<boolean> {
+    if (!isUndefined(params.organization) && isEmpty(params.organization)) {
+      throw new BadRequestException('The organization is invalid.');
+    }
+
+    if (!isUndefined(params.seed_phrase) && isEmpty(params.seed_phrase)) {
+      throw new BadRequestException('The seed phrase is invalid.');
+    }
+
+    if (
+      !isUndefined(params.wallets) &&
+      params.wallets.some(
+        ({ wallet_name, private_key }) =>
+          isEmpty(wallet_name) || !validator.isWalletPrivateKey(private_key),
+      )
+    ) {
+      throw new BadRequestException('The wallets are invalid.');
+    }
+
     const response = await this.patch(
       'defi',
       {
@@ -319,7 +385,7 @@ export class HashieldAIRepository extends BaseRepository {
     );
 
     if (!response) {
-      throw new Error('Can not update defi wallet.');
+      throw new InternalServerErrorException('Can not update the defi wallet.');
     }
 
     return true;
@@ -337,7 +403,7 @@ export class HashieldAIRepository extends BaseRepository {
     });
 
     if (!response) {
-      throw new Error('Can not delete defi wallets.');
+      throw new InternalServerErrorException('Can not delete defi wallets.');
     }
 
     return true;
@@ -351,7 +417,7 @@ export class HashieldAIRepository extends BaseRepository {
     });
 
     if (!response) {
-      throw new Error('Can not get contacts.');
+      throw new InternalServerErrorException('Can not get contacts.');
     }
 
     return response;
@@ -374,7 +440,7 @@ export class HashieldAIRepository extends BaseRepository {
     );
 
     if (!response) {
-      throw new Error('Can not update contacts.');
+      throw new InternalServerErrorException('Can not update contacts.');
     }
 
     return response;
@@ -388,7 +454,7 @@ export class HashieldAIRepository extends BaseRepository {
     });
 
     if (!response) {
-      throw new Error('Can not get profile.');
+      throw new InternalServerErrorException('Can not get the profile.');
     }
 
     return {
@@ -405,6 +471,61 @@ export class HashieldAIRepository extends BaseRepository {
     owner: Web3Address,
     params: ProfileParams,
   ): Promise<boolean> {
+    if (
+      !isUndefined(params.profile.first_name) &&
+      isEmpty(params.profile.first_name)
+    ) {
+      throw new BadRequestException('The first name is invalid.');
+    }
+
+    if (
+      !isUndefined(params.profile.last_name) &&
+      isEmpty(params.profile.last_name)
+    ) {
+      throw new BadRequestException('The last name is invalid.');
+    }
+
+    if (
+      !isUndefined(params.profile.birthday) &&
+      !validator.isDateOfBirth(params.profile.birthday)
+    ) {
+      throw new BadRequestException('The date of birth is invalid.');
+    }
+
+    if (!isUndefined(params.profile.city) && isEmpty(params.profile.city)) {
+      throw new BadRequestException('The city is invalid.');
+    }
+
+    if (!isUndefined(params.profile.state) && isEmpty(params.profile.state)) {
+      throw new BadRequestException('The state is invalid.');
+    }
+
+    if (
+      !isUndefined(params.profile.post_code) &&
+      !isNumberString(params.profile.post_code)
+    ) {
+      throw new BadRequestException('The postcode is invalid.');
+    }
+
+    if (
+      !isUndefined(params.profile.gender) &&
+      !isEnum(params.profile.gender, Gender)
+    ) {
+      throw new BadRequestException('The gender is invalid.');
+    }
+
+    if (
+      !isUndefined(params.cards) &&
+      params.cards.some(
+        ({ expire_date, cvc, card_number }) =>
+          !validator.isExpireDate(expire_date) ||
+          isEmpty(cvc) ||
+          !isNumberString(card_number),
+      )
+    ) {
+      throw new BadRequestException('The cards are invalid.');
+    }
+
     const response = await this.post(
       'autofill',
       {

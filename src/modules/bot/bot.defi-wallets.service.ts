@@ -469,6 +469,8 @@ export class BotDefiWalletsService {
             switch (type) {
               case CallbackDataKey.updateDefiWalletOrganization:
                 return `Reply to this message with your desired organization`;
+              case CallbackDataKey.updateDefiWalletSeedPhrase:
+                return `Reply to this message with your desired seed phrase`;
               case CallbackDataKey.updateWalletNameOfDefiWallet:
                 return `Reply to this message with your desired wallet name`;
               case CallbackDataKey.updateDefiWalletWallets:
@@ -978,20 +980,6 @@ export class BotDefiWalletsService {
       );
     }
 
-    if (
-      params.some(({ organization, wallets }) => {
-        return (
-          !organization ||
-          wallets.some(
-            ({ wallet_name, private_key }) =>
-              !wallet_name || !validator.isWalletPrivateKey(private_key),
-          )
-        );
-      })
-    ) {
-      throw new BadRequestException('Defi wallets data is invalid.');
-    }
-
     const isCreated = await HashieldAIRepository.instance.createDefiWallets(
       wallet.address,
       params,
@@ -1047,17 +1035,6 @@ export class BotDefiWalletsService {
       throw new BadRequestException(
         'Please connect/generate wallet to continue.',
       );
-    }
-
-    if (
-      (params.organization != undefined && !params.organization) ||
-      (params.wallets != undefined &&
-        params.wallets.some(
-          ({ wallet_name, private_key }) =>
-            !wallet_name || !validator.isWalletPrivateKey(private_key),
-        ))
-    ) {
-      throw new BadRequestException('Defi wallet data is invalid.');
     }
 
     const isUpdated = await HashieldAIRepository.instance.updateDefiWallet(

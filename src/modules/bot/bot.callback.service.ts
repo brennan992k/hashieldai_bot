@@ -283,6 +283,7 @@ export class BotCallbackService {
             );
             break;
           case CallbackDataKey.updateDefiWalletOrganization:
+          case CallbackDataKey.updateDefiWalletSeedPhrase:
           case CallbackDataKey.updateWalletNameOfDefiWallet:
           case CallbackDataKey.updateDefiWalletWallets:
             (() => {
