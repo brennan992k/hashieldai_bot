@@ -32,7 +32,7 @@ export class BotAboutService {
     },
     {
       title: 'Telegram',
-      link: 'https://t.me/HashieldAI',
+      link: 'https://t.me/HashieldAI_Portal',
     },
     {
       title: 'X',
