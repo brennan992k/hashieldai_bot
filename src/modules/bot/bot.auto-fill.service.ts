@@ -426,11 +426,6 @@ export class BotAutoFillService {
           const [card_number, cvc, expire_date] = message.text
             .split(',')
             .map((_) => _?.trim());
-          console.log(
-            !isNumberString(card_number),
-            isEmpty(cvc),
-            !validator.isExpireDate(expire_date),
-          );
           if (
             !isNumberString(card_number) ||
             isEmpty(cvc) ||
@@ -900,7 +895,7 @@ export class BotAutoFillService {
               first_name: undefined,
               last_name: undefined,
               gender: Gender.male,
-              birthday: '1/1/1975',
+              birthday: undefined,
               city: undefined,
               state: undefined,
               post_code: undefined,
