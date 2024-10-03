@@ -14,6 +14,11 @@ export enum Gender {
   others = 'others',
 }
 
+export enum ShareType {
+  limitRights = 'limit_rights',
+  fullRights = 'full_rights',
+}
+
 export type PasswordHealth = {
   id: string;
   name: string;
@@ -295,6 +300,43 @@ export class HashieldAIRepository extends BaseRepository {
     return true;
   }
 
+  public async shareCredentials(
+    owner: Web3Address,
+    receivers: Array<Web3Address>,
+    credentials: Array<Credential>,
+    type: ShareType,
+  ): Promise<boolean> {
+    const response: Array<any> = await Promise.all(
+      receivers.reduce<Array<Promise<any>>>(
+        (list, receiver) => [
+          ...list,
+          ...credentials.map((credential) =>
+            this.post(
+              'transferweb',
+              {
+                data: credential,
+                transferOwner: receiver,
+                transfer_type: type,
+              },
+              {
+                headers: {
+                  api_key: this.encryptData(owner),
+                },
+              },
+            ),
+          ),
+        ],
+        [],
+      ),
+    );
+
+    if (response.length != receivers.length * credentials.length) {
+      throw new InternalServerErrorException('Can not share credentials.');
+    }
+
+    return true;
+  }
+
   public async getDefiWallets(owner: Web3Address): Promise<Array<DefiWallet>> {
     const response: Array<DefiWallet> = await this.get('defi', {
       headers: {
@@ -416,6 +458,43 @@ export class HashieldAIRepository extends BaseRepository {
 
     if (!response) {
       throw new InternalServerErrorException('Can not delete defi wallets.');
+    }
+
+    return true;
+  }
+
+  public async shareDefiWallets(
+    owner: Web3Address,
+    receivers: Array<Web3Address>,
+    defiWallets: Array<DefiWallet>,
+    type: ShareType,
+  ) {
+    const response: Array<any> = await Promise.all(
+      receivers.reduce<Array<Promise<any>>>(
+        (list, receiver) => [
+          ...list,
+          ...defiWallets.map((defiWallet) =>
+            this.post(
+              'transferdefi',
+              {
+                data: defiWallet,
+                transferOwner: receiver,
+                transfer_type: type,
+              },
+              {
+                headers: {
+                  api_key: this.encryptData(owner),
+                },
+              },
+            ),
+          ),
+        ],
+        [],
+      ),
+    );
+
+    if (response.length != receivers.length * defiWallets.length) {
+      throw new InternalServerErrorException('Can not share defiWallets.');
     }
 
     return true;
