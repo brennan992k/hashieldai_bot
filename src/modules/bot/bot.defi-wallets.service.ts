@@ -72,19 +72,25 @@ export class BotDefiWalletsService {
     { title: 'Wallet 3', key: 'wallet3' },
   ];
 
-  private _templateData = [
-    {
-      organization: 'Your organization',
-      seedPhrase:
-        'apple, orange, banana, grape, lemon, cherry, peach, mango, plum, kiwi, raspberry, watermelon',
-      wallet1:
-        'Example Wallet 1 Name,0x4c0883a69102937d62394728a8c0d8f1b7c8312b7d39b9b6d0aa9151c147e91e',
-      wallet2:
-        'Example Wallet 2 Name,0x4c0883a69102937d62394728a8c0d8f1b7c8312b7d39b9b6d0aa9151c147e91d',
-      wallet3:
-        'Example Wallet 3 Name,0x4c0883a69102937d62394728a8c0d8f1b7c8312b7d39b9b6d0aa9151c147e91f',
-    },
-  ];
+  private get _templateData() {
+    const chain = chains[ChainId.Ethereum];
+    return [
+      {
+        organization: 'Your organization',
+        seedPhrase:
+          'apple, orange, banana, grape, lemon, cherry, peach, mango, plum, kiwi, raspberry, watermelon',
+        wallet1: `Example Wallet 1 Name,${
+          ethers.Wallet.createRandom(chain.rpcProvider).privateKey
+        }`,
+        wallet2: `Example Wallet 2 Name,${
+          ethers.Wallet.createRandom(chain.rpcProvider).privateKey
+        }`,
+        wallet3: `Example Wallet 3 Name,${
+          ethers.Wallet.createRandom(chain.rpcProvider).privateKey
+        }`,
+      },
+    ];
+  }
 
   public async onDeleteWalletOfDefiWallet(
     @Ctx() ctx: Context,
