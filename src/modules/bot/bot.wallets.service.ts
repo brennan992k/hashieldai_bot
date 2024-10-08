@@ -429,7 +429,13 @@ export class BotWalletsService {
         throw new InternalServerErrorException('The wallet is not found.');
       }
 
-      if (wallet.isDefault) {
+      const total = await this.walletModel
+        .countDocuments({
+          telegramUserId: from.id,
+        })
+        .exec();
+
+      if (wallet.isDefault && total > 1) {
         throw new BadRequestException('The wallet is using.');
       }
 
