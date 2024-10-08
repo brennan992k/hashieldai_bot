@@ -28,7 +28,7 @@ export const validator = {
     try {
       if (!privateKey) return false;
       const wallet = new ethers.Wallet(privateKey);
-      return wallet.privateKey.slice(2, wallet.privateKey.length) == privateKey;
+      return !!wallet.privateKey;
     } catch (error) {
       return false;
     }
