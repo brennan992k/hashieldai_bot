@@ -641,7 +641,7 @@ export class BotWeb2LoginsService {
                 ...params,
                 deleteMessageIds: [
                   ...params.deleteMessageIds,
-                  ...JSON.parse(job.params).deleteMessageIds,
+                  ...(JSON.parse(job.params).deleteMessageIds ?? []),
                 ],
               }),
             },

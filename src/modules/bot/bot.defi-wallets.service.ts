@@ -769,7 +769,7 @@ export class BotDefiWalletsService {
                 ...params,
                 deleteMessageIds: [
                   ...params.deleteMessageIds,
-                  ...JSON.parse(job.params).deleteMessageIds,
+                  ...(JSON.parse(job.params).deleteMessageIds ?? []),
                 ],
               }),
             },
