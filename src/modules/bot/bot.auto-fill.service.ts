@@ -27,6 +27,8 @@ import { Model } from 'mongoose';
 import { Job } from './schemas/job.schema';
 import { isEmpty, isNumberString, isString } from 'class-validator';
 import { validator } from 'src/common/utils/validator';
+import { BotSubscriptionService } from './bot.subscription.service';
+import { Plan } from 'src/contracts/type';
 
 type UpdateProfileJobParams = {
   deleteMessageId: number;
@@ -44,6 +46,7 @@ export class BotAutoFillService {
     protected readonly jobModel: Model<Job>,
     protected readonly configService: ConfigService,
     protected readonly walletsService: BotWalletsService,
+    protected readonly subtionService: BotSubscriptionService,
     protected readonly authService: BotAuthService,
     protected readonly helperService: BotHelperService,
     protected readonly service: BotService,
@@ -62,6 +65,8 @@ export class BotAutoFillService {
     backTo?: CallbackDataKey,
   ) {
     try {
+      if (await this.subtionService.onSubscription(ctx, Plan.Pro)) return;
+
       const profile = await this.getProfile(ctx);
 
       if (!profile) {
@@ -96,6 +101,8 @@ export class BotAutoFillService {
     backTo?: CallbackDataKey,
   ) {
     try {
+      if (await this.subtionService.onSubscription(ctx, Plan.Pro)) return;
+
       this.onSelectCardOfProfile(ctx, cardIndex, refreshFrom, backTo, true);
 
       this.service.shortReply(ctx, `💚 Refreshed successfully.`);
@@ -181,6 +188,8 @@ export class BotAutoFillService {
     sync = false,
   ) {
     try {
+      if (await this.subtionService.onSubscription(ctx, Plan.Pro)) return;
+
       const profile = await this.getProfile(ctx, sync);
 
       if (!profile) {
@@ -218,6 +227,8 @@ export class BotAutoFillService {
     backTo?: CallbackDataKey,
   ) {
     try {
+      if (await this.subtionService.onSubscription(ctx, Plan.Pro)) return;
+
       this.onProfileCards(ctx, refreshFrom, backTo, true);
 
       this.service.shortReply(ctx, `💚 Refreshed successfully.`);
@@ -281,6 +292,8 @@ export class BotAutoFillService {
     sync = false,
   ) {
     try {
+      if (await this.subtionService.onSubscription(ctx, Plan.Pro)) return;
+
       if (await this.authService.onEnterAccessToken(ctx)) return;
 
       const profile = await this.getProfile(ctx, sync);
@@ -316,6 +329,8 @@ export class BotAutoFillService {
   ): Promise<JobStatus> {
     const { chat } = ctx;
     try {
+      if (await this.subtionService.onSubscription(ctx, Plan.Pro)) return;
+
       let { deleteMessageId, editMessageId, type, cardIndex } = JSON.parse(
         job.params,
       ) as UpdateProfileJobParams;
@@ -571,6 +586,8 @@ export class BotAutoFillService {
     sync = false,
   ) {
     try {
+      if (await this.subtionService.onSubscription(ctx, Plan.Pro)) return;
+
       const { from, update } = ctx;
       const { message: editMessage } = update.callback_query;
 
@@ -687,6 +704,8 @@ export class BotAutoFillService {
     backTo?: CallbackDataKey,
   ) {
     try {
+      if (await this.subtionService.onSubscription(ctx, Plan.Pro)) return;
+
       this.onAutoFill(ctx, refreshFrom, backTo, true);
 
       this.service.shortReply(ctx, `💚 Refreshed successfully.`);
@@ -846,6 +865,8 @@ export class BotAutoFillService {
   ) {
     try {
       if (await this.authService.onEnterAccessToken(ctx)) return;
+
+      if (await this.subtionService.onSubscription(ctx, Plan.Pro)) return;
 
       const profile = await this.getProfile(ctx, sync);
 

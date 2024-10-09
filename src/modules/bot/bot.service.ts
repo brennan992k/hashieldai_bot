@@ -31,6 +31,7 @@ export class BotService {
     url: string;
     docsUrl: string;
     authUrl: string;
+    subscriptionUrl: string;
     telegramBot: string;
   };
 

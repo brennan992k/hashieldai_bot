@@ -27,6 +27,8 @@ import { XLSXUtils } from 'src/common/utils/xlsx';
 import { getWebsiteInfo } from 'src/common/utils/website';
 import { isEmpty } from 'class-validator';
 import { validator } from 'src/common/utils/validator';
+import { BotSubscriptionService } from './bot.subscription.service';
+import { Plan } from 'src/contracts/type';
 
 type ImportCredentialsJobParams = {
   deleteMessageIds: Array<number>;
@@ -49,6 +51,7 @@ export class BotWeb2LoginsService {
     protected readonly jobModel: Model<Job>,
     protected readonly configService: ConfigService,
     protected readonly walletsService: BotWalletsService,
+    protected readonly subtionService: BotSubscriptionService,
     protected readonly authService: BotAuthService,
     protected readonly helperService: BotHelperService,
     protected readonly service: BotService,
@@ -101,6 +104,8 @@ export class BotWeb2LoginsService {
     backTo?: CallbackDataKey,
   ) {
     try {
+      if (await this.subtionService.onSubscription(ctx, Plan.Basic)) return;
+
       const credential = await this.getCredential(ctx, credentialId);
 
       if (!credential) {
@@ -132,6 +137,8 @@ export class BotWeb2LoginsService {
     backTo?: CallbackDataKey,
   ) {
     try {
+      if (await this.subtionService.onSubscription(ctx, Plan.Basic)) return;
+
       this.onSelectCredential(ctx, credentialId, refreshFrom, backTo, true);
 
       this.service.shortReply(ctx, `💚 Refreshed successfully.`);
@@ -153,6 +160,8 @@ export class BotWeb2LoginsService {
   ): Promise<JobStatus> {
     const { chat } = ctx;
     try {
+      if (await this.subtionService.onSubscription(ctx, Plan.Basic)) return;
+
       const { deleteMessageIds, editMessageId, credentialId, type } =
         JSON.parse(job.params) as UpdateCredentialJobParams;
 
@@ -268,6 +277,8 @@ export class BotWeb2LoginsService {
     backTo?: CallbackDataKey,
   ) {
     try {
+      if (await this.subtionService.onSubscription(ctx, Plan.Basic)) return;
+
       const { from, update } = ctx;
       const { message: editMessage } = update.callback_query;
 
@@ -475,6 +486,8 @@ export class BotWeb2LoginsService {
     sync = false,
   ) {
     try {
+      if (await this.subtionService.onSubscription(ctx, Plan.Basic)) return;
+
       const credential = await this.getCredential(ctx, credentialId, sync);
 
       if (!credential) {
@@ -506,6 +519,8 @@ export class BotWeb2LoginsService {
     backTo?: CallbackDataKey,
   ) {
     try {
+      if (await this.subtionService.onSubscription(ctx, Plan.Basic)) return;
+
       this.onWeb2Logins(ctx, refreshFrom, backTo, true);
 
       this.service.shortReply(ctx, `💚 Refreshed successfully.`);
@@ -528,6 +543,8 @@ export class BotWeb2LoginsService {
   ): Promise<JobStatus> {
     const { chat } = ctx;
     try {
+      if (await this.subtionService.onSubscription(ctx, Plan.Basic)) return;
+
       const fileId = message.document.file_id;
 
       const { deleteMessageIds, editMessageId } = JSON.parse(
@@ -605,6 +622,8 @@ export class BotWeb2LoginsService {
     backTo?: CallbackDataKey,
   ) {
     try {
+      if (await this.subtionService.onSubscription(ctx, Plan.Basic)) return;
+
       const { from, update } = ctx;
       const { message: editMessage } = update.callback_query;
 
@@ -679,6 +698,8 @@ export class BotWeb2LoginsService {
     backTo?: CallbackDataKey,
   ) {
     try {
+      if (await this.subtionService.onSubscription(ctx, Plan.Basic)) return;
+
       const { from, update } = ctx;
       const { message: editMessage } = update.callback_query;
 
@@ -793,6 +814,8 @@ export class BotWeb2LoginsService {
   ) {
     try {
       if (await this.authService.onEnterAccessToken(ctx)) return;
+
+      if (await this.subtionService.onSubscription(ctx, Plan.Basic)) return;
 
       const credentials = await this.getCredentials(ctx, sync);
 

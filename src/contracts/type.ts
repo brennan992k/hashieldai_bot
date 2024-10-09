@@ -1,9 +1,10 @@
-export type StakingData = {
-  stakedAmount: bigint;
-  formattedStakedAmount?: number;
-  isStaked: boolean;
-  tokenRewardAmount: bigint;
-  formattedTokenRewardAmount?: number;
-  nativeRewardAmount: bigint;
-  formattedNativeRewardAmount?: number;
+export enum Plan {
+  Basic = 0,
+  Pro = 1,
+  Ultimate = 2,
+}
+
+export type SubscriptionData = {
+  plan: Plan;
+  expiredTime: bigint;
 };

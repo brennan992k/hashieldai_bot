@@ -30,6 +30,8 @@ import { Job } from './schemas/job.schema';
 import { isEmpty } from 'class-validator';
 import { XLSXUtils } from 'src/common/utils/xlsx';
 import { validator } from 'src/common/utils/validator';
+import { BotSubscriptionService } from './bot.subscription.service';
+import { Plan } from 'src/contracts/type';
 
 type UpdateDefiWalletJobParams = {
   deleteMessageIds: Array<number>;
@@ -53,6 +55,7 @@ export class BotDefiWalletsService {
     protected readonly jobModel: Model<Job>,
     protected readonly configService: ConfigService,
     protected readonly walletsService: BotWalletsService,
+    protected readonly subtionService: BotSubscriptionService,
     protected readonly authService: BotAuthService,
     protected readonly helperService: BotHelperService,
     protected readonly service: BotService,
@@ -101,6 +104,8 @@ export class BotDefiWalletsService {
     sync = false,
   ) {
     try {
+      if (await this.subtionService.onSubscription(ctx, Plan.Basic)) return;
+
       const defiWallet = await this.getDefiWallet(ctx, defiWalletId, sync);
 
       if (!defiWallet) {
@@ -136,6 +141,8 @@ export class BotDefiWalletsService {
     backTo?: CallbackDataKey,
   ) {
     try {
+      if (await this.subtionService.onSubscription(ctx, Plan.Basic)) return;
+
       this.onSelectWalletOfDefiWallet(
         ctx,
         defiWalletId,
@@ -218,6 +225,8 @@ export class BotDefiWalletsService {
     sync = false,
   ) {
     try {
+      if (await this.subtionService.onSubscription(ctx, Plan.Basic)) return;
+
       const defiWallet = await this.getDefiWallet(ctx, defiWalletId, sync);
 
       if (!defiWallet) {
@@ -260,6 +269,8 @@ export class BotDefiWalletsService {
     sync = false,
   ) {
     try {
+      if (await this.subtionService.onSubscription(ctx, Plan.Basic)) return;
+
       const defiWallet = await this.getDefiWallet(ctx, defiWalletId, sync);
 
       if (!defiWallet) {
@@ -291,6 +302,8 @@ export class BotDefiWalletsService {
     backTo?: CallbackDataKey,
   ) {
     try {
+      if (await this.subtionService.onSubscription(ctx, Plan.Basic)) return;
+
       this.onSelectDefiWallet(ctx, defiWalletId, refreshFrom, backTo, true);
 
       this.service.shortReply(ctx, `💚 Refreshed successfully.`);
@@ -313,6 +326,8 @@ export class BotDefiWalletsService {
   ): Promise<JobStatus> {
     const { chat } = ctx;
     try {
+      if (await this.subtionService.onSubscription(ctx, Plan.Basic)) return;
+
       let { deleteMessageIds, editMessageId, defiWalletId, type, walletIndex } =
         JSON.parse(job.params) as UpdateDefiWalletJobParams;
 
@@ -460,6 +475,8 @@ export class BotDefiWalletsService {
     sync = false,
   ) {
     try {
+      if (await this.subtionService.onSubscription(ctx, Plan.Basic)) return;
+
       const { from, update } = ctx;
       const { message: editMessage } = update.callback_query;
 
@@ -610,6 +627,8 @@ export class BotDefiWalletsService {
     sync = false,
   ) {
     try {
+      if (await this.subtionService.onSubscription(ctx, Plan.Basic)) return;
+
       const defiWallet = await this.getDefiWallet(ctx, defiWalletId, sync);
 
       if (!defiWallet) {
@@ -639,6 +658,8 @@ export class BotDefiWalletsService {
     backTo?: CallbackDataKey,
   ) {
     try {
+      if (await this.subtionService.onSubscription(ctx, Plan.Basic)) return;
+
       this.onDefiWallets(ctx, refreshFrom, backTo, true);
 
       this.service.shortReply(ctx, `💚 Refreshed successfully.`);
@@ -661,6 +682,8 @@ export class BotDefiWalletsService {
   ): Promise<JobStatus> {
     const { chat } = ctx;
     try {
+      if (await this.subtionService.onSubscription(ctx, Plan.Basic)) return;
+
       const fileId = message.document.file_id;
 
       const { deleteMessageIds, editMessageId } = JSON.parse(
@@ -739,6 +762,8 @@ export class BotDefiWalletsService {
     backTo?: CallbackDataKey,
   ) {
     try {
+      if (await this.subtionService.onSubscription(ctx, Plan.Basic)) return;
+
       const { from, update } = ctx;
       const { message: editMessage } = update.callback_query;
 
@@ -811,6 +836,8 @@ export class BotDefiWalletsService {
     backTo?: CallbackDataKey,
   ) {
     try {
+      if (await this.subtionService.onSubscription(ctx, Plan.Basic)) return;
+
       const { from, update } = ctx;
       const { message: editMessage } = update.callback_query;
 
@@ -925,6 +952,8 @@ export class BotDefiWalletsService {
   ) {
     try {
       if (await this.authService.onEnterAccessToken(ctx)) return;
+
+      if (await this.subtionService.onSubscription(ctx, Plan.Basic)) return;
 
       const defiWallets = await this.getDefiWallets(ctx, sync);
 

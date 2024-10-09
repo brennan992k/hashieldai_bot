@@ -9,6 +9,8 @@ import { BotAuthService } from './bot.auth.service';
 import { CallbackData, CallbackDataKey } from './types';
 import { User } from 'telegraf/typings/core/types/typegram';
 import { BotHelperService } from './bot.helper.service';
+import { BotSubscriptionService } from './bot.subscription.service';
+import { Plan } from 'src/contracts/type';
 
 @Injectable()
 export class BotWalletHealthService {
@@ -17,6 +19,7 @@ export class BotWalletHealthService {
     protected readonly bot: Telegraf<Scenes.SceneContext>,
     protected readonly configService: ConfigService,
     protected readonly authService: BotAuthService,
+    protected readonly subtionService: BotSubscriptionService,
     protected readonly helperService: BotHelperService,
     protected readonly service: BotService,
   ) {}
@@ -46,10 +49,12 @@ export class BotWalletHealthService {
     backTo?: CallbackDataKey,
   ) {
     try {
+      if (await this.authService.onEnterAccessToken(ctx)) return;
+
+      if (await this.subtionService.onSubscription(ctx, Plan.Pro)) return;
+
       this.service.reply(ctx, 'Coming soon...');
       return;
-
-      if (await this.authService.onEnterAccessToken(ctx)) return;
 
       const { from } = ctx;
 

@@ -23,6 +23,7 @@ import { BotAutoFillService } from './bot.auto-fill.service';
 import { BotPasswordHealthService } from './bot.password-health.service';
 import { BotWalletHealthService } from './bot.wallet-health.service';
 import { BotDefiWalletsService } from './bot.defi-wallets.service';
+import { BotSubscriptionService } from './bot.subscription.service';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { BotDefiWalletsService } from './bot.defi-wallets.service';
     BotAuthService,
     BotMenuService,
     BotAboutService,
+    BotSubscriptionService,
     BotWalletsService,
     BotWeb2LoginsService,
     BotDefiWalletsService,
@@ -63,8 +65,13 @@ import { BotDefiWalletsService } from './bot.defi-wallets.service';
     BotAuthService,
     BotMenuService,
     BotAboutService,
+    BotSubscriptionService,
     BotWalletsService,
     BotWeb2LoginsService,
+    BotDefiWalletsService,
+    BotAutoFillService,
+    BotPasswordHealthService,
+    BotWalletHealthService,
     BotTokensService,
     BotPollService,
   ],

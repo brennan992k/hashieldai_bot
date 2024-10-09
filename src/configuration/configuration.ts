@@ -44,6 +44,7 @@ export class Configuration {
     url: string;
     docsUrl: string;
     authUrl: string;
+    subscriptionUrl: string;
     telegramBot: string;
   };
   auth: {
@@ -92,6 +93,7 @@ export const configuration = (): Configuration => {
       url: process.env.WEBSITE_URL ?? '',
       docsUrl: process.env.WEBSITE_DOCS_URL ?? '',
       authUrl: process.env.WEBSITE_AUTH_URL ?? '',
+      subscriptionUrl: process.env.WEBSITE_SUBSCRIPTION_URL ?? '',
       telegramBot: process.env.WEBSITE_TELEGRAM_BOT ?? '',
     },
     auth: {
