@@ -75,7 +75,7 @@ export class BotSubscriptionService {
 
   private async getSubscription(
     @Ctx() ctx,
-    sync = false,
+    sync = true,
   ): Promise<SubscriptionData> {
     const wallet = await this.walletsService.getDefaultWallet(ctx);
     if (!wallet) return;
@@ -93,6 +93,7 @@ export class BotSubscriptionService {
             wallet.privateKey,
             `${securityKey}_${wallet.address}_${wallet.telegramUserId}`,
           );
+          console.log(privateKey, chain);
           const contract = new SubscriptionContract(
             wallet.chainId,
             new ethers.Wallet(privateKey, chain.rpcProvider),
