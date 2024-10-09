@@ -1,45 +1,83 @@
 import { ethers } from 'ethers';
-import * as eTokens from './tokens/1.json';
+// import * as eTokens from './tokens/1.json';
 import * as bTokens from './tokens/56.json';
 import * as aTokens from './tokens/42161.json';
 import * as pTokens from './tokens/137.json';
 import { ChainId, ChainData, Token, Web3Address } from 'src/app.type';
 
 export const chains: { [chain in ChainId]: ChainData } = {
+  // [ChainId.Ethereum]: {
+  //   name: 'Ethereum',
+  //   rpc: 'https://eth.llamarpc.com',
+  //   hasExplorer: true,
+  //   explorer: {
+  //     name: 'EtherScan',
+  //     root: 'https://etherscan.io/',
+  //     address: 'address/',
+  //     tx: 'tx/',
+  //     token: 'token/',
+  //   },
+  //   chart: 'https://www.geckoterminal.com/eth/pools',
+  //   rpcProvider: new ethers.JsonRpcProvider('https://eth.llamarpc.com'),
+  //   logo: '',
+  //   chainId: ChainId.Ethereum,
+  //   native: {
+  //     symbol: 'ETH',
+  //     name: 'Ether',
+  //     decimals: 18,
+  //     address: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+  //     logoURI:
+  //       'https://tokens.1inch.io/0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee.png',
+  //     tags: ['native', 'PEG:ETH'],
+  //   },
+  //   wrap: {
+  //     symbol: 'WETH',
+  //     name: 'Wrapped Ether',
+  //     address: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+  //     decimals: 18,
+  //     logoURI:
+  //       'https://tokens.1inch.io/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2.png',
+  //     tags: ['tokens', 'PEG:ETH'],
+  //   },
+  //   tokens: eTokens as Record<Web3Address, Token>,
+  // },
+
   [ChainId.Ethereum]: {
-    name: 'Ethereum',
-    rpc: 'https://eth.llamarpc.com',
+    name: 'Binance Smart Chain Test Net',
+    rpc: 'https://data-seed-prebsc-1-s1.binance.org:8545/',
     hasExplorer: true,
     explorer: {
-      name: 'EtherScan',
-      root: 'https://etherscan.io/',
+      name: 'BscScan',
+      root: 'https://testnet.bscscan.com/',
       address: 'address/',
       tx: 'tx/',
       token: 'token/',
     },
-    chart: 'https://www.geckoterminal.com/eth/pools',
-    rpcProvider: new ethers.JsonRpcProvider('https://eth.llamarpc.com'),
+    chart: 'https://www.geckoterminal.com/bsc/pools/',
+    rpcProvider: new ethers.JsonRpcProvider(
+      'https://data-seed-prebsc-1-s1.binance.org:8545/',
+    ),
     logo: '',
-    chainId: ChainId.Ethereum,
+    chainId: ChainId.BinanceSmartChainTestNet,
     native: {
-      symbol: 'ETH',
-      name: 'Ether',
+      symbol: 'tBNB',
+      name: 'tBNB',
       decimals: 18,
       address: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
       logoURI:
-        'https://tokens.1inch.io/0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee.png',
-      tags: ['native', 'PEG:ETH'],
+        'https://tokens.1inch.io/0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c.png',
+      tags: ['native'],
     },
     wrap: {
-      symbol: 'WETH',
-      name: 'Wrapped Ether',
-      address: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+      symbol: 'tWBNB',
+      name: 'Wrapped tBNB',
       decimals: 18,
+      address: '0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c',
       logoURI:
-        'https://tokens.1inch.io/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2.png',
-      tags: ['tokens', 'PEG:ETH'],
+        'https://tokens.1inch.io/0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c.png',
+      tags: ['tokens', 'PEG:tBNB'],
     },
-    tokens: eTokens as Record<Web3Address, Token>,
+    tokens: bTokens as Record<Web3Address, Token>,
   },
 
   [ChainId.BinanceSmartChain]: {

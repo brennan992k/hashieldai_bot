@@ -87,7 +87,7 @@ export class BotSubscriptionService {
     if (sync || !subscription) {
       subscription = await (async () => {
         try {
-          const chain: ChainData = chains[ChainId.BinanceSmartChainTestNet];
+          const chain: ChainData = chains[wallet.chainId];
           const securityKey = this.configService.get('securityKey');
           const privateKey = decryptData(
             wallet.privateKey,
