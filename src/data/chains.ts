@@ -41,6 +41,7 @@ export const chains: { [chain in ChainId]: ChainData } = {
     },
     tokens: eTokens as Record<Web3Address, Token>,
   },
+
   [ChainId.BinanceSmartChain]: {
     name: 'Binance Smart Chain',
     rpc: 'https://bsc-dataseed4.bnbchain.org',
