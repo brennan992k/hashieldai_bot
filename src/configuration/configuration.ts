@@ -21,9 +21,6 @@ export class Configuration {
   mongoose: {
     url: string;
   };
-  redis: {
-    url: string;
-  };
   jwt: {
     secret: string;
     expiresIn: number;
@@ -69,9 +66,6 @@ export const configuration = (): Configuration => {
       'UTC',
     mongoose: {
       url: process.env.MONGOOSE_URL || 'mongodb+srv://',
-    },
-    redis: {
-      url: process.env.REDIS_URL || 'redis://',
     },
     jwt: {
       secret: process.env.JWT_SECRET || '',
